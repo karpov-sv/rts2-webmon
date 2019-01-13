@@ -63,6 +63,7 @@ Monitor.prototype.requestState = function(){
 
         success: function(json){
             $(this.id).find('.monitor-throbber').animate({opacity: 1.0}, 200).animate({opacity: 0.1}, 400);
+            $(this.id).find(".monitor-body").removeClass("disabled-controls");
 
             this.json = json;
 
@@ -70,7 +71,6 @@ Monitor.prototype.requestState = function(){
         },
 
         error: function(){
-            $(this.id).find(".monitor-connstatus").html("Disconnected").addClass("label-danger").removeClass("label-success");
             $(this.id).find(".monitor-body").addClass("disabled-controls");
         },
 
@@ -85,9 +85,6 @@ Monitor.prototype.updateStatus = function(status, clients){
     show($(this.id).find(".monitor-body"));
     enable($(this.id).find(".monitor-body"));
 
-    $(this.id).find(".monitor-connstatus").html("Connected").removeClass("label-danger").addClass("label-success");
-    $(this.id).find(".monitor-body").removeClass("disabled-controls");
-
     if(this.clients.length != Object.keys(clients).length){
         this.makeClients(clients, status);
     }
@@ -100,10 +97,7 @@ Monitor.prototype.updateStatus = function(status, clients){
         $.observable(this.clients[i]['params']).setProperty(client);
 
         if(isEmpty(client_status) || client_status == '0' || !client['connected']) {
-            this.clients[i]['state'].removeClass("label-success").addClass("label-warning");
-
             hide(widget.find(".monitor-client-body"));
-            // widget.find(".monitor-client-connstatus").html("Disconnected").removeClass("label-success").addClass("label-danger");
         } else {
             // Crude hack to re-render the template completely if structure of status has changed too much
             // It seems it can't be easily done using data-linking alone for our complex template logic
@@ -114,24 +108,23 @@ Monitor.prototype.updateStatus = function(status, clients){
                 client_status = {};
 
             if(should_rerender){
-                // Completely re-render the tempated view
+                // Completely re-render the templated view
                 this.clients[i]['status'] = client_status;
                 this.renderClient(this.clients[i]);
             } else {
                 // Remove entries no more in status
                 for(var name in this.clients[i]['status']){
-                    if(!(name in client_status))
+                    if(!(name in client_status) && (name.indexOf('jQuery') != 0)){
+                        console.log('removeProperty', name, this.clients[i]['status'][name]);
                         $.observable(this.clients[i]['status']).removeProperty(name);
+                    }
                 }
 
                 // Update templated view using data-linked values
                 $.observable(this.clients[i]['status']).setProperty(client_status);
             }
 
-            this.clients[i]['state'].addClass("label-success").removeClass("label-warning");
-
             show(widget.find(".monitor-client-body"));
-            // widget.find(".monitor-client-connstatus").html("Connected").addClass("label-success").removeClass("label-danger");
         }
     }
 
@@ -156,8 +149,6 @@ Monitor.prototype.makeClients = function(clients)
         var client = {'name':name, 'params':clients[name]};
 
         this.clients.push(client);
-
-        client['state'] = $("<span/>", {class:"monitor-client-state label label-default", style:'margin-right: 0.5em'}).html(name).appendTo(clientsstate);
 
         client['template'] = getData(this.root + 'template/' + clients[name]['template']);
         client['widget'] = $("<div/>").appendTo($(this.id).find('.monitor-clients'));
