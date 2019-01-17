@@ -62,6 +62,14 @@
 
     <!-- Main content -->
 
+    <div class="small text-muted" style="padding: 5px">
+      Night start <span class="text-info">{^{: ~date(status.centrald^d.night_beginning) }}</span> end <span class="text-info">{^{: ~date(status.centrald^d.night_ending) }}</span>.
+
+      Moon rise <span class="text-info">{^{: ~date(status.centrald^d.moon_rise) }}</span> set <span class="text-info">{^{: ~date(status.centrald^d.moon_set) }}</span>.
+
+      Lunar phase <span class="text-info">{^{: (status.centrald^d.lunar_phase).toFixed(1) }}</span> deg, limb <span class="text-info">{^{: (status.centrald^d.lunar_limb).toFixed(1) }}</span> deg, altitude <span class="text-info">{^{: (status.centrald^d.moon_alt).toFixed(1) }}</span> deg
+    </div>
+
     <!-- Show all key=value pairs from the status -->
     <div class="monitor-client-main" style="padding: 5px">
       <div class="row">
@@ -102,23 +110,30 @@
 
               <!-- Centrald -->
               {{if ~device_status(key, 'type') == 1}}
+              {{if (~device_status(key, 'state') & 2147483648) }}
               <ul class="small"><li>
-                <span class="text-muted">
-                  next night: {^{: ~date(~device_status_var('centrald', 'night_beginning')) }} - {^{: ~date(~device_status_var('centrald', 'night_ending')) }}
+                <span class="text-warning bg-warning">
+                  bad weather from
+                  {^{: ~device_status_var(key, 'bad_weather_device') }} :
+                  {^{: ~device_status_var(key, 'bad_weather_reason') }}
                 </span>
-              </li></ul>
+              </li>
+              </ul>
+              {{/if}}
               {{/if}}
 
               <!-- Mount -->
               {{if ~device_status(key, 'type') == 2}}
-              {{if ((~root.status.centrald^state & 15) != 2 || (~root.status.centrald^state & 15) != 3 || (~root.status.centrald^state & 15) != 4) && ((~device_status(key, 'state') & 7) != 2) }}
+              {{if ((~root.status.centrald^state & 15) != 2 && (~root.status.centrald^state & 15) != 3 && (~root.status.centrald^state & 15) != 4) && ((~device_status(key, 'state') & 7) != 2) }}
               <ul class="small"><li><span class="label label-danger">Mount is not parked</span></li></ul>
               {{/if}}
               {{/if}}
 
               <!-- Camera -->
               {{if ~device_status(key, 'type') == 3}}
+              {{if ~device_status_var(key, 'SCRIPT')}}
               <ul class="small"><li>{{device_status_var key 'SCRIPT' 'text-muted' /}}</li></ul>
+              {{/if}}
               {{/if}}
 
               <!-- Dome -->
@@ -157,17 +172,26 @@
               {{/if}}
 
               <!-- Next-Good-Weather -->
-              {{if ~device_status_var(key, 'next_good_weather') && ~device_status_var(key, 'next_good_weather') > ~device_status_var(key, 'infotime') }}
+              {{if ~device_status_var(key, 'next_good_weather') && ~device_status_var(key, 'next_good_weather') > ~now() }}
               <ul class="small"><li><span class='text-warning bg-warning'>
                 next good weather: {{: ~date(~device_status_var(key, 'next_good_weather')) }}
               </span></li></ul>
               {{/if}}
 
               <!-- Next-Open -->
-              {{if ~device_status_var(key, 'next_open') && ~device_status_var(key, 'next_open') > ~device_status_var(key, 'infotime') }}
+              {{if ~device_status_var(key, 'next_open') && ~device_status_var(key, 'next_open') > ~now() }}
               <ul class="small"><li><span class='text-warning bg-warning'>
                 next open: {{: ~date(~device_status_var(key, 'next_open')) }}
               </span></li></ul>
+              {{/if}}
+
+              <!-- ImgProc -->
+              {{if ~device_status(key, 'type') == 21}}
+              {{if ~device_status_var(key, 'free_diskspace') && ~device_status_var(key, 'free_diskspace')/1024/1024/1024 < 10 }}
+              <ul class="small"><li><span class='label label-danger'>
+                Low disk space: {{: (~device_status_var(key, 'free_diskspace')/1024/1024/1024).toFixed(1) }} Gb
+              </span></li></ul>
+              {{/if}}
               {{/if}}
 
               <!-- Selector -->
@@ -196,6 +220,7 @@
         <div class="col-md-4">
           {{if params.webcam }}
           <img src="{{> params.webcam }}" class="monitor-webcam-{{> ~root.params.name }} img img-responsive center-block">
+          {{/if}}
           <div class="text-center">
             {{props params.links}}
             <span class="text-info">
@@ -206,7 +231,6 @@
             </span>
             {{/props}}
           </div>
-          {{/if}}
         </div>
       </div>
     </div>
