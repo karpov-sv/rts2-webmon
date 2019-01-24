@@ -1,4 +1,4 @@
-class DefaultClient extends React.Component {
+class FramClient extends React.Component {
     render() {
         var client = this.props.client;
         var status = this.props.status;
@@ -121,6 +121,47 @@ class DefaultClient extends React.Component {
                     // camera
                     if (type == 3 && vars['SCRIPT'])
                         dev_sub.push(<span className="text-muted" key="camera_script">{vars['SCRIPT']}</span>);
+
+                    // dome
+                    if (type == 4) {
+                        if (!(vars['sw_open_left']) && (state & 0x06))
+                            dev_sub.push(<span className="label label-danger" key="sw_open_left">
+                                           Left open switch is off
+                                         </span>);
+
+                        if (!(vars['sw_open_right']) && (state & 0x06))
+                            dev_sub.push(<span className="label label-danger" key="sw_open_right">
+                                           Right open switch is off
+                                         </span>);
+
+                        if (vars['12V'] == 0 || vars['12VDC'] == 0)
+                            dev_sub.push(<span className="label label-danger" key="12v_off">
+                                           12V is off
+                                         </span>);
+                    }
+
+                    // weather
+                    if (name == 'WEATHER') {
+                        var elem;
+
+                        if (client.name == 'cta-n')
+                            elem = (<span className="text-muted" key={'weather1'}>
+                                      wind { vars['windspeed'].toFixed(1) } m/s,
+                                      temperature { vars['temperature'].toFixed(1) } C,
+                                      humidity { vars['humidity'].toFixed(1) }%,
+                                      pressure { vars['pressure'].toFixed(1) }.
+                                    </span>);
+                        else if (client.name == 'auger')
+                            elem = (<span className="text-muted" key={'weather1'}>
+                                      wind { (vars['windspeed']/3.6).toFixed(1) } m/s.
+                                    </span>);
+
+                        if (vars['rain'])
+                            elem = [elem, <Label className="danger" key={'weather2'}>Rain</Label>];
+
+                        if (elem)
+                            dev_sub.push(elem);
+                    }
 
                     // next-good-weather
                     if (vars['next_good_weather'] && vars['next_good_weather'] > now())

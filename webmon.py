@@ -7,10 +7,12 @@ from twisted.web.static import File
 from twisted.web.client import Agent, readBody
 from twisted.web.http_headers import Headers
 from twisted.internet.endpoints import TCP4ServerEndpoint
+from twisted.web.proxy import ReverseProxyResource
+from twisted.python.compat import urlquote
 
 from twistedauth import wrap_with_auth as Auth
 
-import os, sys, posixpath, datetime, base64, re
+import os, sys, posixpath, datetime, base64, re, glob
 import urlparse
 import json
 import numpy as np
@@ -209,6 +211,44 @@ class WebMonitor(Resource):
             return q.path;
         # return serve_json(request, clients=self.object['clients'])
 
+class ServeFiles(Resource):
+    isLeaf = True
+
+    @catch
+    def __init__(self, glob='*', type='text/plain'):
+        self.glob = glob
+        self.type = type
+
+    @catch
+    def render_GET(self, request):
+        result = "";
+
+        for filename in glob.glob(self.glob):
+            result += open(filename).read()
+
+        request.responseHeaders.setRawHeaders("Content-Type", [self.type])
+        return result
+
+class ReverseProxyResourceAuth(ReverseProxyResource):
+    def __init__(self, host, port, path, reactor=reactor, username=None, password=None, base=None):
+        self._username = username
+        self._password = password
+        self._base = base
+
+        return ReverseProxyResource.__init__(self, host, port, path, reactor)
+
+    def render(self, request):
+        if self._username:
+            request.requestHeaders.setRawHeaders('Authorization', ["Basic " + base64.encodestring('%s:%s' % (self._username, self._password)).strip()])
+
+        if self._base:
+            request.requestHeaders.setRawHeaders('X-Request-Base', [self._base])
+
+        return ReverseProxyResource.render(self, request)
+
+    def getChild(self, path, request):
+        return ReverseProxyResourceAuth(self.host, self.port, self.path + b'/' + urlquote(path, safe=b"").encode('utf-8'), reactor=self.reactor, username=self._username, password=self._password, base=self._base)
+
 def loadINI(filename, obj):
     # We use ConfigObj library, docs: http://configobj.readthedocs.io/en/latest/index.html
     from configobj import ConfigObj,Section # apt-get install python-configobj
@@ -229,7 +269,7 @@ def loadINI(filename, obj):
     username = string(default='')
     password = string(default='')
     description = string(default=None)
-    template = string(default=default.html)
+    template = string(default=DefaultClient)
     update_interval = float(min=0, max=3600, default=1)
     devices = list(default=,)
     webcam = string(default='')
@@ -331,10 +371,15 @@ if __name__ == '__main__':
     root.putChild("", File('web/main.html'))
     root.putChild("monitor", webmon)
 
+    root.putChild("all.jsx", ServeFiles('web/*.jsx'))
+
     if obj['username']:
         print 'Username:', obj['username']
         print 'Password:', obj['password']
         site = Site(Auth(root, {obj['username']:obj['password']}))
+
+        # Do not expose the username and password
+        obj['username'] = '*'
         obj['password'] = '*'
     else:
         site = Site(root)
@@ -342,7 +387,15 @@ if __name__ == '__main__':
     for name,c in obj['clients'].items():
         print "Adding periodic polling of status from", c['name'], "at",  c['baseurl'], "every", c['update_interval'], "s"
         webmon.REST_request(c['baseurl'], '/api/getall', user=c['username'], password=c['password'], repeat=c['update_interval'], name=c['name'])
+
+        # Reverse proxy for HTTPD web interface
+        url = urlparse.urlparse(c['baseurl'])
+        # root.putChild(c['name'], ReverseProxyResourceAuth(url.hostname, url.port, url.path, username=c['username'], password=c['password'], base='/'+c['name']))
+
+        # Do not expose the username and password
+        c['username'] = '*'
         c['password'] = '*'
+
         c['connected'] = False
 
     print "Listening for incoming HTTP connections on port %d" % options.http_port

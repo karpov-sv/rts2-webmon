@@ -14,12 +14,15 @@ class Monitor extends React.Component {
 
         for (var i = 0; i < clients_list.length; i++){
             var name = this.state.clients[clients_list[i]].name;
+            // FIXME: hackish way to get object by name, what is better?..
+            var Client = window[this.state.clients[clients_list[i]].template];
 
-            contents.push(<Client status={this.state.status[name]} client={this.state.clients[name]} key={name}/>);
+            if (Client)
+                contents.push(<Client status={this.state.status[name]} client={this.state.clients[name]} key={name}/>);
         }
 
         return (
-            <div>
+            <div className={this.state.connected ? null : "disabled-controls"}>
               {contents}
             </div>
         );

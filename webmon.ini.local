@@ -7,9 +7,23 @@ name = monitor
 # enabled = False
 baseurl = http://localhost:58889
 description = Local RTS2
-template = default.html
+template = DefaultClient
 # username =
 # password =
 devices = centrald,T0,C0,DOME,F0,W0,WEATHER,EXEC,IMGP,SEL,HTTPD
 update_interval = 10
 order = 1
+# Example webcam
+webcam = http://pc048b.fzu.cz/fram/webcam/cta-n.jpg
+
+# Example links for external resources
+[[links]]
+[[[1]]]
+name = Webcam
+url = http://pc048b.fzu.cz/~fram/cta-n.html
+[[[2]]]
+name = AllSky
+url = http://pc048b.fzu.cz/~jakub/allsky/lapalma.html
+[[[3]]]
+name = NOT Weather
+url = http://www.not.iac.es/weather
