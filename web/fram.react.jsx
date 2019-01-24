@@ -95,6 +95,8 @@ class FramClient extends React.Component {
                         dev_class = "text-warning bg-warning";
                     else if (type == 2 && ((state & 0x07) == 1 || (state & 0x07) == 4))
                         dev_class = "text-info bg-info";
+                    else if (type == 2 && state == 0)
+                        dev_class = "text-danger bg-danger";
                     else if (type == 3 && (state & 0x03))
                         dev_class = "text-info bg-info";
                     else if (type == 4 && (state & 0x1a))
