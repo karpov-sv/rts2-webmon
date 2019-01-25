@@ -184,7 +184,7 @@ class DefaultClient extends React.Component {
               <Panel expanded={client.connected}>
                 <Panel.Heading>
                   <Panel.Title componentClass='h3'>
-                    {client.name}
+                    {client.description}
                     <span style={{marginLeft:"0.5em"}}/>
                     {head_status}
                   </Panel.Title>
