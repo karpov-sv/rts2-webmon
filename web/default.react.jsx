@@ -75,6 +75,7 @@ class DefaultClient extends React.Component {
             for (var i = 0; i < client.devices.length; i++) {
                 var name = client.devices[i];
                 var type = status[name].type;
+                var dev_name = name;
 
                 var dev_class = "text-danger";
                 var dev_body = null;
@@ -83,6 +84,8 @@ class DefaultClient extends React.Component {
                 if (status[name].connected) {
                     var vars = status[name].d;
                     var state = status[name].state;
+
+                    dev_name = <DeviceModal title={name + "   " + status[name].statestring} activator={name} variables={vars}/>;
 
                     dev_body = status[name].statestring;
 
@@ -164,7 +167,7 @@ class DefaultClient extends React.Component {
                 // Construct the piece describing single device
                 var body = (
                     <span className={dev_class}>
-                      <span style={{minWidth: "7em", display: "inline-block"}}>{name}</span>
+                      <span style={{minWidth: "7em", display: "inline-block"}}>{dev_name}</span>
                       {dev_body}
                       {dev_sub &&
                        <ul className="small">
