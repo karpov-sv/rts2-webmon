@@ -260,8 +260,16 @@ class ReverseProxyResourceAuth(ReverseProxyResource):
         if self._username:
             request.requestHeaders.setRawHeaders('Authorization', ["Basic " + base64.encodestring('%s:%s' % (self._username, self._password)).strip()])
 
-        if self._base:
-            request.requestHeaders.setRawHeaders('X-Request-Base', [self._base])
+        if self._base or request.getHeader('X-Request-Base'):
+            base = ""
+
+            if request.getHeader('X-Request-Base'):
+                base += request.getHeader('X-Request-Base')
+
+            if self._base:
+                base += self._base
+
+            request.requestHeaders.setRawHeaders('X-Request-Base', [base])
 
         return ReverseProxyResource.render(self, request)
 
