@@ -60,7 +60,7 @@ class FramClient extends React.Component {
 
         if (status) {
             // Current night and Moon info
-            if (status['centrald'].connected)
+            if (status['centrald'] && status['centrald'].connected && status['centrald'].d && status['centrald'].d.lunar_phase)
                 night_info = (
                     <div className="small text-muted" style={{padding: "5px"}}>
                       Night start <span className="text-info"><UnixTime time={status['centrald'].d.night_beginning}/></span> end <span className="text-info"><UnixTime time={status['centrald'].d.night_ending}/></span>.
@@ -99,6 +99,8 @@ class FramClient extends React.Component {
                         dev_class = "text-danger bg-danger";
                     else if (type == 3 && (state & 0x03))
                         dev_class = "text-info bg-info";
+                    else if (type == 4 && (vars['emergency']))
+                        dev_class = "text-danger bg-danger";
                     else if (type == 4 && (state & 0x1a))
                         dev_class = "text-info bg-info";
                     else if (type == 10 && state)
@@ -139,6 +141,14 @@ class FramClient extends React.Component {
                         if (vars['12V'] == 0 || vars['12VDC'] == 0)
                             dev_sub.push(<span className="label label-danger" key="12v_off">
                                            12V is off
+                                         </span>);
+                        if (vars['mount_is_on'] == 0)
+                            dev_sub.push(<span className="label label-danger" key="mount_off">
+                                           Mount is off
+                                         </span>);
+                        if (vars['emergency'])
+                            dev_sub.push(<span className="label label-danger" key="emergency">
+                                           Emergency
                                          </span>);
                     }
 
