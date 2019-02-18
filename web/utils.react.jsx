@@ -17,11 +17,14 @@ class Link extends React.Component {
     }
 }
 
-function unixtime(unix) {
+function unixtime(unix, age=true) {
     if (unix) {
         var t = moment.unix(unix);
         var dt = moment.duration(t.diff(moment()));
-        return t.format('YYYY-MM-DD HH:mm:ss ZZ') + ' (' + dt.format() + ')';
+        if (age)
+            return t.format('YYYY-MM-DD HH:mm:ss ZZ') + ' (' + dt.format() + ')';
+        else
+            return t.format('YYYY-MM-DD HH:mm:ss ZZ');
     } else
         return "---";
 }

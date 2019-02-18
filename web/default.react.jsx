@@ -190,6 +190,11 @@ class DefaultClient extends React.Component {
                     {client.description}
                     <span style={{marginLeft:"0.5em"}}/>
                     {head_status}
+                    {this.props.auth &&
+                     <span className="pull-right">
+                       <LogModal client={client} />
+                     </span>
+                    }
                   </Panel.Title>
                 </Panel.Heading>
                 <Panel.Body collapsible style={{padding: "5px", margin: "1px"}}>
@@ -219,3 +224,5 @@ class DefaultClient extends React.Component {
         );
     }
 }
+
+DefaultClient = ReactRedux.connect(mapStateToProps)(DefaultClient);

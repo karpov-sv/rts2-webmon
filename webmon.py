@@ -197,7 +197,21 @@ class WebMonitor(Resource):
         if q.path == '/monitor/status':
             return serve_json(request,
                               clients = self.object['clients'],
-                              status = self.object['status'])
+                              status = self.object['status'],
+                              auth = self.object['sessions'].has_key(request.getSession().uid),
+                              username = self.object['sessions'].get(request.getSession().uid))
+
+        elif q.path == '/monitor/auth':
+            result = False
+
+            if args.has_key('username') and args.has_key('password') and args['username'][0] == self.object['api_username'] and args['password'][0] == self.object['api_password']:
+                self.object['sessions'][request.getSession().uid] = args.get('username')
+                result = True
+            else:
+                self.object['sessions'].pop(request.getSession().uid, None)
+                request.getSession().expire()
+
+            return serve_json(request, auth = result)
 
         # /monitor/plots/{client}/{name}
         elif qs[1] == 'monitor' and qs[2] == 'plot' and len(qs) > 4:
@@ -231,14 +245,18 @@ class ServeFiles(Resource):
         return result
 
 class ReverseProxyResourceAuth(ReverseProxyResource):
-    def __init__(self, host, port, path, reactor=reactor, username=None, password=None, base=None):
+    def __init__(self, host, port, path, reactor=reactor, username=None, password=None, base=None, object=None):
         self._username = username
         self._password = password
         self._base = base
+        self.object = object
 
         return ReverseProxyResource.__init__(self, host, port, path, reactor)
 
     def render(self, request):
+        if not obj['sessions'].has_key(request.getSession().uid):
+            return "Not authorized"
+
         if self._username:
             request.requestHeaders.setRawHeaders('Authorization', ["Basic " + base64.encodestring('%s:%s' % (self._username, self._password)).strip()])
 
@@ -263,6 +281,8 @@ def loadINI(filename, obj):
     db_status_interval = float(min=0, max=3600, default=%g)
     username = string(default='')
     password = string(default='')
+    api_username = string(default='')
+    api_password = string(default='')
 
     [__many__]
     enabled = boolean(default=True)
@@ -328,7 +348,7 @@ def loadINI(filename, obj):
 
             obj['clients'][sname] = client
 
-        for key in ['http_port', 'name', 'db_host', 'db_status_interval', 'username', 'password']:
+        for key in ['http_port', 'name', 'db_host', 'db_status_interval', 'username', 'password', 'api_username', 'api_password']:
             obj[key] = conf.get(key)
 
     # print obj
@@ -389,15 +409,19 @@ if __name__ == '__main__':
         print "Adding periodic polling of status from", c['name'], "at",  c['baseurl'], "every", c['update_interval'], "s"
         webmon.REST_request(c['baseurl'], '/api/getall', user=c['username'], password=c['password'], repeat=c['update_interval'], name=c['name'])
 
-        # Reverse proxy for HTTPD web interface
-        url = urlparse.urlparse(c['baseurl'])
-        # root.putChild(c['name'], ReverseProxyResourceAuth(url.hostname, url.port, url.path, username=c['username'], password=c['password'], base='/'+c['name']))
+        if obj['api_username']:
+            # Reverse proxy for HTTPD web interface
+            url = urlparse.urlparse(c['baseurl'])
+            root.putChild(c['name'], ReverseProxyResourceAuth(url.hostname, url.port, url.path, username=c['username'], password=c['password'], base='/'+c['name'], object=obj))
+            print "Direct access to RTS2 HTTPD exposed under", "/"+c['name']+"/"
 
         # Do not expose the username and password
         c['username'] = '*'
         c['password'] = '*'
 
         c['connected'] = False
+
+    obj['sessions'] = {}
 
     print "Listening for incoming HTTP connections on port %d" % options.http_port
     TCP4ServerEndpoint(reactor, options.http_port).listen(site)
