@@ -16,6 +16,7 @@ import os, sys, posixpath, datetime, base64, re, glob
 import urlparse
 import json
 import numpy as np
+from collections import OrderedDict
 
 from StringIO import StringIO
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -145,7 +146,7 @@ class WebMonitor(Resource):
     def REST_process(self, body, baseurl=None, path=None, name=None):
         '''Processing of reply from REST API endpoint'''
         if path == '/api/getall' and name and self.object['clients'].has_key(name):
-            status = json.loads(body)
+            status = json.loads(body, object_pairs_hook=OrderedDict)
             # self.object['clients'][name]['status'] = status
             self.object['status'][name] = status
             self.object['clients'][name]['connected'] = True
