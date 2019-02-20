@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+[B#!/usr/bin/env python
 from twisted.internet import reactor, task
 from twisted.protocols.basic import LineReceiver
 from twisted.web.server import Site
@@ -205,14 +205,16 @@ class WebMonitor(Resource):
             result = False
 
             if args.has_key('username') and args.has_key('password') and args['username'][0] == self.object['api_username'] and args['password'][0] == self.object['api_password']:
+                print "Authorized session", request.getSession().uid
                 self.object['sessions'][request.getSession().uid] = args.get('username')
                 request.getSession().sessionTimeout = 24*3600*7
                 result = True
             else:
+                print "De-authorized session", request.getSession().uid
                 self.object['sessions'].pop(request.getSession().uid, None)
                 request.getSession().expire()
 
-            return serve_json(request, auth = result)
+            return serve_json(request, auth = result, username=self.object['sessions'].get(request.getSession().uid))
 
         # /monitor/plots/{client}/{name}
         elif qs[1] == 'monitor' and qs[2] == 'plot' and len(qs) > 4:
