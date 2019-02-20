@@ -206,6 +206,7 @@ class WebMonitor(Resource):
 
             if args.has_key('username') and args.has_key('password') and args['username'][0] == self.object['api_username'] and args['password'][0] == self.object['api_password']:
                 self.object['sessions'][request.getSession().uid] = args.get('username')
+                request.getSession().sessionTimeout = 24*3600*7
                 result = True
             else:
                 self.object['sessions'].pop(request.getSession().uid, None)
