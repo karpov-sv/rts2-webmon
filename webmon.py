@@ -1,4 +1,4 @@
-[B#!/usr/bin/env python
+#!/usr/bin/env python
 from twisted.internet import reactor, task
 from twisted.protocols.basic import LineReceiver
 from twisted.web.server import Site
