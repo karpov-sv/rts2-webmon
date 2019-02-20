@@ -75,8 +75,8 @@ class DefaultClient extends React.Component {
             for (var i = 0; i < client.devices.length; i++) {
                 var name = client.devices[i];
                 var type = status[name].type;
-                var dev_name = name;
 
+                var dev_name = name;
                 var dev_class = "text-danger";
                 var dev_body = null;
                 var dev_sub = [];
@@ -181,6 +181,10 @@ class DefaultClient extends React.Component {
             }
         }
 
+        // List of commands for Quick Command modal
+        var commands = {'Centrald': {'Off': 'centrald.off', 'Standby': 'centrald.standby', 'On': 'centrald.on'}};
+        commands['EXEC'] = {'Stop': 'EXEC.stop'};
+
         // Construct the component
         return (
             <div>
@@ -193,6 +197,16 @@ class DefaultClient extends React.Component {
                     {this.props.auth &&
                      <span className="pull-right">
                        <LogModal client={client} />
+
+                       <span style={{marginLeft:"0.5em"}}/>
+
+                       <a href={this.props.root + client.name + '/preview/'} className="link-unstyled" title="Image Previews" target="_blank">
+                         <span className="glyphicon glyphicon-picture"/>
+                       </a>
+
+                       <span style={{marginLeft:"0.5em"}}/>
+
+                       <CmdModal client={client} commands={commands}/>
                      </span>
                     }
                   </Panel.Title>

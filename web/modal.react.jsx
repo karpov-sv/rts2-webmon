@@ -50,10 +50,24 @@ class LogModal extends React.Component {
                       checkbox: {info: true, warning: true, error: true, debug: false}};
 
         this.last = 0;
+        this.messages_end = React.createRef();
+        this.modal_body = React.createRef();
+        this.should_scroll = true;
     }
 
     componentDidMount() {
         this.requestState();
+    }
+
+    scrollToBottom() {
+        if(this.messages_end && this.messages_end.current && this.should_scroll) {
+            this.messages_end.current.scrollIntoView({ behavior: 'smooth' });
+            this.should_scroll = false;
+        }
+    }
+
+    componentDidUpdate() {
+        this.scrollToBottom();
     }
 
     componentWillUnmount() {
@@ -122,6 +136,10 @@ class LogModal extends React.Component {
                 list.push(<tr key={i} className={ctype}><td nowrap={1} style={style}>{unixtime(msg[0], false)}</td><td style={style}>{msg[1]}</td><td style={style}>{type}</td><td nowrap={1} style={style}>{msg[3]}</td></tr>);
         }
 
+        if(this.messages_end.current && this.modal_body.current &&
+           this.messages_end.current.getBoundingClientRect().bottom <= this.modal_body.current.getBoundingClientRect().bottom + 10)
+            this.should_scroll = true;
+
         return (
             <>
               {/* Activator element */}
@@ -131,7 +149,7 @@ class LogModal extends React.Component {
                </span>
               }
               {!this.props.activator &&
-               <span className="glyphicon glyphicon-list" onClick={() => this.setState({show: true})} title="Messages Log"/>
+               <span className="glyphicon glyphicon-console" onClick={() => this.setState({show: true})} title="Messages Log + Command Line"/>
               }
 
               {/* Modal window */}
@@ -139,15 +157,21 @@ class LogModal extends React.Component {
                 <Modal.Header closeButton>
                   <Modal.Title>{this.props.title ? this.props.title : "Messages Log"}</Modal.Title>
                 </Modal.Header>
-                <Modal.Body style={{'maxHeight': 'calc(100vh - 210px)', 'overflowY': 'auto', 'overflowX': 'auto', 'padding': 0}}>
-                  {list.length ?
-                   <Table striped bordered hover size="sm">
-                     <tbody>
-                       {list}
-                     </tbody>
-                   </Table>
-                   : <p className="text-center">{this.state.error}</p>}
-                </Modal.Body>
+                <div ref={this.modal_body}>
+                  <Modal.Body style={{'maxHeight': 'calc(100vh - 210px)', 'overflowY': 'auto', 'overflowX': 'auto', 'padding': 0}}>
+                    {list.length ?
+                     <Table striped bordered hover size="sm">
+                       <tbody>
+                         {list}
+                       </tbody>
+                     </Table>
+                     : <p className="text-center">{this.state.error}</p>}
+                    <div ref={this.messages_end} />
+                  </Modal.Body>
+                </div>
+                <div style={{padding: "0.1em"}}>
+                  <CmdLine client={this.props.client} onComplete={() => this.requestState()}/>
+                </div>
                 <Modal.Footer>
                   <Checkbox onChange={evt => this.handleCheckbox(evt, "info")} inline={1} className="pull-left" checked={this.state.checkbox.info}>Info</Checkbox>
                   <Checkbox onChange={evt => this.handleCheckbox(evt, "warning")} inline={1} className="pull-left" checked={this.state.checkbox.warning}>Warning</Checkbox>
@@ -228,7 +252,7 @@ class AuthModal extends React.Component {
               {!this.props.activator && this.props.auth &&
                <>
                  Logged in as <strong>{this.props.username}</strong>.
-                 <a onClick={() => this.handleLogout()}><span className="glyphicon glyphicon-log-in"/> Log out</a>
+                 <a onClick={() => this.handleLogout()}><span className="glyphicon glyphicon-log-out"/> Log out</a>
                </>}
               {!this.props.activator && !this.props.auth &&
                <a onClick={() => this.handleShow()}><span className="glyphicon glyphicon-log-in"/> Log in</a>
@@ -261,3 +285,107 @@ class AuthModal extends React.Component {
 }
 
 AuthModal = ReactRedux.connect(mapStateToProps)(AuthModal);
+
+class CmdModal extends React.Component {
+    constructor(props, context) {
+        super(props, context);
+        this.state = {show: false, disabled: false, message: null, ret: 0};
+    }
+
+    handleShow() {
+        this.setState({show: true, message: null});
+        this.pos = 0;
+    }
+
+    sendCommand(command) {
+        var cmd;
+        var data;
+        var m = parseCommand(command);
+
+        if(m)
+            [cmd,data] = m;
+        else {
+            this.setState({message: "Can't parse command: " + command});
+            return;
+        }
+
+        this.setState({message: "", disabled: true});
+
+        $.ajax({
+            url: this.props.root + this.props.client.name + "/api/"+cmd,
+            dataType : "json",
+            timeout : 10000,
+            context: this,
+            data: data,
+
+            success: function(json){
+                this.setState({message: json.ret + ' ' + command, ret: json.ret});
+            },
+
+            error: function(){
+                this.setState({message: "API request error", ret: -1});
+            },
+
+            complete: function(xhr, status) {
+                this.setState({disabled: false});
+            }
+        });
+    }
+
+    render() {
+        var cmdlist = [];
+
+        for(var key in this.props.commands) {
+            if(this.props.commands.hasOwnProperty(key)) {
+                var buttonlist = [];
+
+                for(var ckey in this.props.commands[key]) {
+                    buttonlist.push(<Button key={ckey} onClick={this.sendCommand.bind(this, this.props.commands[key][ckey])}>{ckey}</Button>);
+                }
+
+                cmdlist.push(
+                    <span style={{paddingLeft: "1em"}} key={key}>
+                      <ButtonGroup>
+                        <Button disabled>{key}:</Button>
+                        {buttonlist}
+                      </ButtonGroup>
+                    </span>
+                );
+            }
+        }
+
+        return (
+            <>
+              {/* Activator element */}
+              {this.props.activator &&
+               <span onClick={() => this.handleShow()}>
+                 {this.props.activator}
+               </span>}
+              {!this.props.activator && this.props.auth &&
+               <span className="glyphicon glyphicon-cog" onClick={() => this.handleShow()} title="Quick Commands"/>
+              }
+
+              {/* Modal window */}
+              <Modal bsSize="lg" show={this.state.show} onHide={() => this.setState({show: false})}>
+                <Modal.Header closeButton>
+                  <Modal.Title>Quick Commands</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+
+                  {cmdlist}
+
+                </Modal.Body>
+                <Modal.Footer>
+                  <span className="pull-left">
+                    {this.state.message &&
+                     <span className={this.state.ret ? "text-danger" : "text-success"}>{this.state.message}</span>}
+                  </span>
+                  <Button bsStyle="default" onClick={() => this.setState({show: false})}>Close</Button>
+                </Modal.Footer>
+              </Modal>
+            </>
+        );
+    }
+}
+
+CmdModal = ReactRedux.connect(mapStateToProps)(CmdModal);
