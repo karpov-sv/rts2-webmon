@@ -94,3 +94,11 @@ function isEmpty(obj) {
     }
     return true;
 }
+
+
+function deepCopy(obj) {
+    if(isArray(obj))
+        return obj.slice(0);
+
+    return jQuery.extend(true, {}, obj);
+}

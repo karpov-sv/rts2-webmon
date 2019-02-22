@@ -4,16 +4,30 @@ class DeviceModal extends React.Component {
         this.state = {show: false};
     }
 
+    shouldComponentUpdate(nextProps, nextState) {
+        if(nextState.show != this.state.show)
+            return true;
+
+        if(!equal(nextProps.variables, this.props.variables))
+            return true;
+
+        if(nextProps.title != this.props.title)
+            return true;
+
+        return false;
+    }
+
     render() {
         var varlist = [];
         var style = {padding: '0.2em', paddingLeft: '0.5em', paddingRight: '0.5em'};
 
-        for(var key in this.props.variables) {
-            if(this.props.variables.hasOwnProperty(key)) {
-                var item = <tr key={key}><td style={style}>{key}</td><td style={style}>{JSON.stringify(this.props.variables[key])}</td></tr>;
-                varlist.push(item);
+        if(this.state.show)
+            for(var key in this.props.variables) {
+                if(this.props.variables.hasOwnProperty(key)) {
+                    var item = <tr key={key}><td style={style}>{key}</td><td style={style}>{JSON.stringify(this.props.variables[key])}</td></tr>;
+                    varlist.push(item);
+                }
             }
-        }
 
         return (
             <>
@@ -74,6 +88,16 @@ class LogModal extends React.Component {
         clearTimeout(this.timer);
     }
 
+    shouldComponentUpdate(nextProps, nextState) {
+        if(nextProps.auth != this.props.auth)
+            return true;
+
+        if(!equal(this.state, nextState))
+            return true;
+
+        return false;
+    }
+
     requestState() {
         if(!this.props.auth)
             return;
@@ -85,7 +109,7 @@ class LogModal extends React.Component {
             context: this,
 
             success: function(json){
-                var messages = this.state.messages;
+                var messages = deepCopy(this.state.messages);
 
                 for (var i = 0; i < json.d.length; i++)
                     if (json.d[i][0] > this.last) {
@@ -112,29 +136,35 @@ class LogModal extends React.Component {
     }
 
     handleCheckbox(evt, type) {
-        var checkbox = this.state.checkbox;
+        var checkbox = deepCopy(this.state.checkbox);
 
         checkbox[type] = evt.target.checked;
 
         this.setState({checkbox: checkbox});
     }
 
+    handleShow() {
+        this.setState({show: true});
+        this.should_scroll = true;
+    }
+
     render() {
         var list = [];
 
-        for (var i = 0; i < this.state.messages.length; i++) {
-            var msg = this.state.messages[i];
+        if(this.state.show)
+            for (var i = 0; i < this.state.messages.length; i++) {
+                var msg = this.state.messages[i];
 
-            var type = ({0x01: "E", 0x02: "W", 0x04: "I", 0x08: "D"})[msg[2] & 0x1f];
-            var ctype = ({0x01: "danger", 0x02: "warning", 0x04: "default", 0x08: "info"})[msg[2] & 0x1f];
-            var style = {padding: '0.2em', paddingLeft: '0.5em', paddingRight: '0.5em'};
+                var type = ({0x01: "E", 0x02: "W", 0x04: "I", 0x08: "D"})[msg[2] & 0x1f];
+                var ctype = ({0x01: "danger", 0x02: "warning", 0x04: "default", 0x08: "info"})[msg[2] & 0x1f];
+                var style = {padding: '0.2em', paddingLeft: '0.5em', paddingRight: '0.5em'};
 
-            if((type == 'I' && this.state.checkbox.info) ||
-               (type == 'W' && this.state.checkbox.warning) ||
-               (type == 'E' && this.state.checkbox.error) ||
-               (type == 'D' && this.state.checkbox.debug))
-                list.push(<tr key={i} className={ctype}><td nowrap={1} style={style}>{unixtime(msg[0], false)}</td><td style={style}>{msg[1]}</td><td style={style}>{type}</td><td nowrap={1} style={style}>{msg[3]}</td></tr>);
-        }
+                if((type == 'I' && this.state.checkbox.info) ||
+                   (type == 'W' && this.state.checkbox.warning) ||
+                   (type == 'E' && this.state.checkbox.error) ||
+                   (type == 'D' && this.state.checkbox.debug))
+                    list.push(<tr key={i} className={ctype}><td nowrap={1} style={style}>{unixtime(msg[0], false)}</td><td style={style}>{msg[1]}</td><td style={style}>{type}</td><td nowrap={1} style={style}>{msg[3]}</td></tr>);
+            }
 
         if(this.messages_end.current && this.modal_body.current &&
            this.messages_end.current.getBoundingClientRect().bottom <= this.modal_body.current.getBoundingClientRect().bottom + 10)
@@ -144,12 +174,12 @@ class LogModal extends React.Component {
             <>
               {/* Activator element */}
               {this.props.activator &&
-               <span onClick={() => this.setState({show: true})}>
+               <span onClick={() => this.handleShow()}>
                  {this.props.activator}
                </span>
               }
               {!this.props.activator &&
-               <span className="glyphicon glyphicon-console" onClick={() => this.setState({show: true})} title="Messages Log + Command Line"/>
+               <span className="glyphicon glyphicon-console" onClick={() => this.handleShow()} title="Messages Log + Command Line"/>
               }
 
               {/* Modal window */}

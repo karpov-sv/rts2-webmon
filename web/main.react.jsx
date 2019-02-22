@@ -36,6 +36,13 @@ class Monitor extends React.Component {
         this.requestState();
     }
 
+    shouldComponentUpdate(nextProps, nextState) {
+        if(!equal(this.state, nextState))
+            return true;
+
+        return false;
+    }
+
     requestState(){
         $.ajax({
             url: this.props.root + "monitor/status",
@@ -61,7 +68,7 @@ class Monitor extends React.Component {
     }
 }
 
-Monitor.defaultProps = {refresh:"2000"};
+Monitor.defaultProps = {refresh:"5000"};
 Monitor = ReactRedux.connect(mapStateToProps)(Monitor);
 
 // Global Redux store
