@@ -18,7 +18,7 @@ function parseCommand(command) {
         data = {d: m[1], n: m[2], v: m[3]};
 
         return [cmd,data];
-    } else if(m = /^\s*(\w+)\.(\w+)\s*$/.exec(command)) {
+    } else if(m = /^\s*(\w+)\.(.+)\s*$/.exec(command)) {
         cmd = 'cmd';
         data = {d: m[1], c: m[2]};
 
