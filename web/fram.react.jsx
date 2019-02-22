@@ -1,4 +1,11 @@
 class FramClient extends React.Component {
+    shouldComponentUpdate(nextProps, nextState) {
+        if(!equal(this.props, nextProps))
+            return true;
+
+        return false;
+    }
+
     render() {
         var client = this.props.client;
         var status = this.props.status;
@@ -76,6 +83,7 @@ class FramClient extends React.Component {
                 var name = client.devices[i];
                 var type = status[name].type;
 
+                var dev_name = name;
                 var dev_class = "text-danger";
                 var dev_body = null;
                 var dev_sub = [];
@@ -83,6 +91,8 @@ class FramClient extends React.Component {
                 if (status[name].connected) {
                     var vars = status[name].d;
                     var state = status[name].state;
+
+                    dev_name = <DeviceModal title={name + "   " + status[name].statestring} activator={name} variables={vars}/>;
 
                     dev_body = status[name].statestring;
 
@@ -215,7 +225,7 @@ class FramClient extends React.Component {
                 // Construct the piece describing single device
                 var body = (
                     <span className={dev_class}>
-                      <span style={{minWidth: "7em", display: "inline-block"}}>{name}</span>
+                      <span style={{minWidth: "7em", display: "inline-block"}}>{dev_name}</span>
                       {dev_body}
                       {dev_sub &&
                        <ul className="small">
@@ -229,6 +239,27 @@ class FramClient extends React.Component {
             }
         }
 
+        // List of commands for Quick Command modal
+        var commands = {'Centrald': {'Off': 'centrald.off', 'Standby': 'centrald.standby', 'On': 'centrald.on'}};
+
+        if (client.name == 'cta-n')
+            commands['Mount'] = {'Park': 'T0.park', 'Stop': 'T0.stop'};
+        else if (client.name == 'auger')
+            commands['Mount'] = {'Park': 'GM2000.park', 'Stop': 'GM2000.stop'};
+
+        var dcmds = {'Open': 'DOME.open', 'Close': 'DOME.close', 'Reset Emergency': 'DOME.reset_emergency', 'Toggle Mount': 'DOME.toggle_mount'};
+        if (client.name == 'cta-n') {
+            dcmds['12V On'] = "DOME.12VDC=1";
+            dcmds['12V Off'] = "DOME.12VDC=0";
+        } else if (client.name == 'auger') {
+            dcmds['12V On'] = "DOME.12V=1";
+            dcmds['12V Off'] = "DOME.12V=0";
+        }
+
+        commands['Dome'] = dcmds;
+
+        commands['EXEC'] = {'Stop': 'EXEC.stop'};
+
         // Construct the component
         return (
             <div>
@@ -238,6 +269,22 @@ class FramClient extends React.Component {
                     {client.description}
                     <span style={{marginLeft:"0.5em"}}/>
                     {head_status}
+                    {client.connected && this.props.auth &&
+                     <span className="pull-right">
+                       <LogModal client={client} />
+
+                       <span style={{marginLeft:"0.5em"}}/>
+
+                       <span className="glyphicon glyphicon-picture" onClick={()=>window.open(this.props.root + client.name + '/preview/', '_blank')} title="Image Previews"/>
+                       {/* <a href={this.props.root + client.name + '/preview/'} className="link-unstyled" title="Image Previews" target="_blank"> */}
+                       {/*   <span className="glyphicon glyphicon-picture"/> */}
+                       {/* </a> */}
+
+                       <span style={{marginLeft:"0.5em"}}/>
+
+                       <CmdModal client={client} commands={commands}/>
+                     </span>
+                    }
                   </Panel.Title>
                 </Panel.Heading>
                 <Panel.Body collapsible style={{padding: "5px", margin: "1px"}}>
@@ -267,3 +314,5 @@ class FramClient extends React.Component {
         );
     }
 }
+
+FramClient = ReactRedux.connect(mapStateToProps)(FramClient);
