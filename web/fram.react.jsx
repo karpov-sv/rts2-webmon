@@ -84,7 +84,7 @@ class FramClient extends React.Component {
                 var type = status[name].type;
 
                 var dev_name = name;
-                var dev_class = "text-danger";
+                var dev_class = "text-danger bg-danger";
                 var dev_body = null;
                 var dev_sub = [];
 
@@ -133,18 +133,26 @@ class FramClient extends React.Component {
                                      </span>);
 
                     // camera
-                    if (type == 3 && vars['SCRIPT'])
-                        dev_sub.push(<span className="text-muted" key="camera_script">{vars['SCRIPT']}</span>);
+                    if (type == 3 && vars['SCRIPT']) {
+                        var s1 = vars['SCRIPT'].substring(0, vars['scriptPosition']);
+                        var s2 = vars['SCRIPT'].substring(vars['scriptPosition'], vars['scriptPosition']+vars['scriptLen']);
+                        var s3 = vars['SCRIPT'].substring(vars['scriptPosition']+vars['scriptLen']);
+
+                        if (s2)
+                            dev_sub.push(<span className="text-muted" key="camera_script_1">{s1}<mark>{s2}</mark>{s3}</span>);
+                        else
+                            dev_sub.push(<span className="text-muted" key="camera_script_1">{s1}{s2}{s3}</span>);
+                    }
 
                     // dome
                     if (type == 4) {
                         if (!(vars['sw_open_left']) && (state & 0x06))
-                            dev_sub.push(<span className="label label-danger" key="sw_open_left">
+                            dev_sub.push(<span className="label label-warning" key="sw_open_left">
                                            Left open switch is off
                                          </span>);
 
                         if (!(vars['sw_open_right']) && (state & 0x06))
-                            dev_sub.push(<span className="label label-danger" key="sw_open_right">
+                            dev_sub.push(<span className="label label-warning" key="sw_open_right">
                                            Right open switch is off
                                          </span>);
 
@@ -152,7 +160,7 @@ class FramClient extends React.Component {
                             dev_sub.push(<span className="label label-danger" key="12v_off">
                                            12V is off
                                          </span>);
-                        if (vars['mount_is_on'] == 0)
+                        if (vars['mount_is_on'] == 0 && (client.name == 'cta-n' || client.name == 'auger'))
                             dev_sub.push(<span className="label label-danger" key="mount_off">
                                            Mount is off
                                          </span>);
@@ -220,6 +228,13 @@ class FramClient extends React.Component {
                                 dev_sub.push(<span>{queue}: {targets}</span>);
                         }
                     }
+
+                    // AUGER
+                    if (name == 'AUGER') {
+                        dev_sub.push(<span className="text-muted" key={'auger1'}>
+                                       last rejected:  <UnixTime time={vars['last_rejected']}/>, accepted:  <UnixTime time={vars['last_date']}/>
+                                    </span>);
+                    }
                 }
 
                 // Construct the piece describing single device
@@ -242,7 +257,7 @@ class FramClient extends React.Component {
         // List of commands for Quick Command modal
         var commands = {'Centrald': {'Off': 'centrald.off', 'Standby': 'centrald.standby', 'On': 'centrald.on'}};
 
-        if (client.name == 'cta-n')
+        if (client.name == 'cta-n' || client.name == 'cta-s1')
             commands['Mount'] = {'Park': 'T0.park', 'Stop': 'T0.stop'};
         else if (client.name == 'auger')
             commands['Mount'] = {'Park': 'GM2000.park', 'Stop': 'GM2000.stop'};
@@ -254,11 +269,30 @@ class FramClient extends React.Component {
         } else if (client.name == 'auger') {
             dcmds['12V On'] = "DOME.12V=1";
             dcmds['12V Off'] = "DOME.12V=0";
+        } else if (client.name == 'cta-s1') {
+            dcmds['12V On'] = "DOME.12VDC=1";
+            dcmds['12V Off'] = "DOME.12VDC=0";
+            dcmds['48V On'] = "DOME.48VDC=1";
+            dcmds['48V Off'] = "DOME.48VDC=0";
         }
 
         commands['Dome'] = dcmds;
 
-        commands['EXEC'] = {'Stop': 'EXEC.stop'};
+        if (client.name == 'cta-n') {
+            commands['C0'] = {'Cooling ON': 'C0.CCD_SET=-20', 'Cooling OFF': 'C0.CCD_SET=50'};
+            commands['WF0'] = {'Cooling ON': 'WF0.CCD_SET=-20', 'Cooling OFF': 'WF0.CCD_SET=50'};
+        }
+
+        if (client.name == 'auger') {
+            commands['NF4'] = {'Cooling ON': 'NF4.CCD_SET=-20', 'Cooling OFF': 'NF4.CCD_SET=50'};
+            commands['WF8'] = {'Cooling ON': 'WF8.CCD_SET=-20', 'Cooling OFF': 'WF8.CCD_SET=50'};
+        }
+
+        if (client.name == 'cta-s1') {
+            commands['FWF'] = {'-100': 'FWF.FOC_TAR-=100', '-10': 'FWF.FOC_TAR-=10', '+10': 'FWF.FOC_TAR+=10', '+100': 'FWF.FOC_TAR+=100'};
+        }
+
+        commands['EXEC'] = {'Stop': 'EXEC.stop', 'Ignore day ON': 'EXEC.ignore_day=1', 'Ignore day OFF': 'EXEC.ignore_day=0'};
 
         // Construct the component
         return (
@@ -275,10 +309,11 @@ class FramClient extends React.Component {
 
                        <span style={{marginLeft:"0.5em"}}/>
 
+                       <ObsModal client={client} />
+
+                       <span style={{marginLeft:"0.5em"}}/>
+
                        <span className="glyphicon glyphicon-picture" onClick={()=>window.open(this.props.root + client.name + '/preview/', '_blank')} title="Image Previews"/>
-                       {/* <a href={this.props.root + client.name + '/preview/'} className="link-unstyled" title="Image Previews" target="_blank"> */}
-                       {/*   <span className="glyphicon glyphicon-picture"/> */}
-                       {/* </a> */}
 
                        <span style={{marginLeft:"0.5em"}}/>
 
