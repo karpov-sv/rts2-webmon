@@ -77,7 +77,7 @@ class DefaultClient extends React.Component {
                 var type = status[name].type;
 
                 var dev_name = name;
-                var dev_class = "text-danger";
+                var dev_class = "text-danger bg-danger";
                 var dev_body = null;
                 var dev_sub = [];
 
@@ -124,8 +124,16 @@ class DefaultClient extends React.Component {
                                      </span>);
 
                     // camera
-                    if (type == 3 && vars['SCRIPT'])
-                        dev_sub.push(<span className="text-muted" key="camera_script">{vars['SCRIPT']}</span>);
+                    if (type == 3 && vars['SCRIPT']) {
+                        var s1 = vars['SCRIPT'].substring(0, vars['scriptPosition']);
+                        var s2 = vars['SCRIPT'].substring(vars['scriptPosition'], vars['scriptPosition']+vars['scriptLen']);
+                        var s3 = vars['SCRIPT'].substring(vars['scriptPosition']+vars['scriptLen']);
+
+                        if (s2)
+                            dev_sub.push(<span className="text-muted" key="camera_script_1">{s1}<mark>{s2}</mark>{s3}</span>);
+                        else
+                            dev_sub.push(<span className="text-muted" key="camera_script_1">{s1}{s2}{s3}</span>);
+                    }
 
                     // next-good-weather
                     if (vars['next_good_weather'] && vars['next_good_weather'] > now())
@@ -200,9 +208,11 @@ class DefaultClient extends React.Component {
 
                        <span style={{marginLeft:"0.5em"}}/>
 
-                       <a href={this.props.root + client.name + '/preview/'} className="link-unstyled" title="Image Previews" target="_blank">
-                         <span className="glyphicon glyphicon-picture"/>
-                       </a>
+                       <ObsModal client={client} />
+
+                       <span style={{marginLeft:"0.5em"}}/>
+
+                       <span className="glyphicon glyphicon-picture" onClick={()=>window.open(this.props.root + client.name + '/preview/', '_blank')} title="Image Previews"/>
 
                        <span style={{marginLeft:"0.5em"}}/>
 
