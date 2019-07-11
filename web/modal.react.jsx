@@ -1,3 +1,4 @@
+// Device variables
 class DeviceModal extends React.Component {
     constructor(props, context) {
         super(props, context);
@@ -57,6 +58,7 @@ class DeviceModal extends React.Component {
     }
 }
 
+// Messages log and command line
 class LogModal extends React.Component {
     constructor(props, context) {
         super(props, context);
@@ -74,9 +76,13 @@ class LogModal extends React.Component {
     }
 
     scrollToBottom() {
-        if(this.messages_end && this.messages_end.current && this.should_scroll) {
+        if(this.messages_end && this.messages_end.current && this.should_scroll && this.state.show) {
             this.messages_end.current.scrollIntoView({ behavior: 'smooth' });
             this.should_scroll = false;
+        } else if(this.messages_end && this.messages_end.current) {
+            this.should_scroll = false;
+        } else {
+            // Not yet properly initialized
         }
     }
 
@@ -89,6 +95,9 @@ class LogModal extends React.Component {
     }
 
     shouldComponentUpdate(nextProps, nextState) {
+        if(this.should_scroll)
+            return true;
+
         if(nextProps.auth != this.props.auth)
             return true;
 
@@ -183,9 +192,9 @@ class LogModal extends React.Component {
               }
 
               {/* Modal window */}
-              <Modal bsSize="lg" show={this.state.show} onHide={() => this.setState({show: false})}>
+              <Modal bsSize="lg" show={this.state.show} onHide={() => this.setState({show: false})} onEntered={() => this.scrollToBottom()}>
                 <Modal.Header closeButton>
-                  <Modal.Title>{this.props.title ? this.props.title : "Messages Log"}</Modal.Title>
+                  <Modal.Title>{this.props.title ? this.props.title : "Messages Log : " + this.props.client.description}</Modal.Title>
                 </Modal.Header>
                 <div ref={this.modal_body}>
                   <Modal.Body style={{'maxHeight': 'calc(100vh - 210px)', 'overflowY': 'auto', 'overflowX': 'auto', 'padding': 0}}>
@@ -196,7 +205,7 @@ class LogModal extends React.Component {
                        </tbody>
                      </Table>
                      : <p className="text-center">{this.state.error}</p>}
-                    <div ref={this.messages_end} />
+                    <div className="ref" ref={this.messages_end} id={"log_modal_end_"+this.props.client.name}/>
                   </Modal.Body>
                 </div>
                 <div style={{padding: "0.1em"}}>
@@ -217,6 +226,7 @@ class LogModal extends React.Component {
 LogModal.defaultProps = {refresh:"5000"};
 LogModal = ReactRedux.connect(mapStateToProps)(LogModal);
 
+// Authentication window and indicator
 class AuthModal extends React.Component {
     constructor(props, context) {
         super(props, context);
@@ -316,6 +326,7 @@ class AuthModal extends React.Component {
 
 AuthModal = ReactRedux.connect(mapStateToProps)(AuthModal);
 
+// List of buttons for a quick commands
 class CmdModal extends React.Component {
     constructor(props, context) {
         super(props, context);
@@ -398,7 +409,7 @@ class CmdModal extends React.Component {
               {/* Modal window */}
               <Modal bsSize="lg" show={this.state.show} onHide={() => this.setState({show: false})}>
                 <Modal.Header closeButton>
-                  <Modal.Title>Quick Commands</Modal.Title>
+                  <Modal.Title>Quick Commands : {this.props.client.description}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
 
@@ -419,3 +430,210 @@ class CmdModal extends React.Component {
 }
 
 CmdModal = ReactRedux.connect(mapStateToProps)(CmdModal);
+
+// List of observations
+class ObsModal extends React.Component {
+    constructor(props, context) {
+        super(props, context);
+        this.state = {show: false, observations: [], messages: [], error: "Loading..."};
+
+        this.observations_end = React.createRef();
+        this.modal_body = React.createRef();
+        this.should_scroll = true;
+        this.should_update = false;
+    }
+
+    componentDidMount() {
+        // this.requestState();
+    }
+
+    scrollToBottom() {
+        if(this.observations_end && this.observations_end.current && this.should_scroll && this.state.show) {
+            this.observations_end.current.scrollIntoView({ behavior: 'smooth' });
+            this.should_scroll = false;
+        } else if(this.observations_end && this.observations_end.current)
+            this.should_scroll = false;
+        else {
+            // Not yet properly initialized?..
+        }
+    }
+
+    componentDidUpdate() {
+        this.scrollToBottom();
+    }
+
+    componentWillUnmount() {
+        clearTimeout(this.timer);
+    }
+
+    shouldComponentUpdate(nextProps, nextState) {
+        if(this.should_scroll)
+            return true;
+
+        if(nextProps.auth != this.props.auth)
+            return true;
+
+        if(!equal(this.state, nextState))
+            return true;
+
+        return this.should_update;
+    }
+
+    requestState() {
+        if(!this.props.auth)
+            return;
+
+        $.ajax({
+            url: this.props.root + this.props.client.name + "/api/obytime",
+            dataType : "json",
+            timeout : 10000,
+            context: this,
+
+            success: function(json){
+                this.setState({error: null, observations: json.d, h: json.h, messages: json.messages.d});
+                this.should_update = true;
+            },
+
+            error: function(){
+                this.setState({error: "API request error"});
+            },
+
+            complete: function(xhr, status) {
+                clearTimeout(this.timer);
+                this.timer = setTimeout($.proxy(this.requestState, this), this.props.refresh);
+            }
+        });
+    }
+
+    handleShow() {
+        this.setState({show: true});
+        this.should_scroll = true;
+        this.requestState();
+    }
+
+    handleHide() {
+        this.setState({show: false});
+        clearTimeout(this.timer);
+    }
+
+    render() {
+        var list = [];
+
+        if(this.state.show) {
+            var prev = null;
+            var mi = 0;
+
+            var add_msg = (mi) => {
+                var msg = this.state.messages[mi];
+                var type = ({0x01: "E", 0x02: "W", 0x04: "I", 0x08: "D"})[msg[2] & 0x1f];
+                var ctype = ({0x01: "danger", 0x02: "warning", 0x04: "success", 0x08: "info"})[msg[2] & 0x1f];
+                var style = {padding: '0.2em', paddingLeft: '0.5em', paddingRight: '0.5em'};
+
+                list.push(<li key={'mi_' + mi} className={"list-group-item list-group-item-" + ctype} style={style}>
+                            <span style={{minWidth: "20em", display: "inline-block"}}>
+                              {unixtime(msg[0], false)}
+                            </span>
+                            <span style={{minWidth: "5em", display: "inline-block"}}>
+                              {msg[1]}
+                            </span>
+                            {type}
+                            &emsp;
+                            {msg[3]}
+                          </li>)};
+
+            for (var i = 0; i < this.state.observations.length; i++) {
+                var obs = this.state.observations[i];
+                var reuse = false;
+                var style = {paddingTop: '0.1em', paddingBottom: '0.1em'};
+
+                if (prev && prev[6] == obs[6]) {
+                    reuse = true;
+                    style['borderTop'] = 0;
+                }
+
+                // Messages before current observation
+                while (mi < this.state.messages.length && this.state.messages[mi][0] < obs[1]) {
+                    add_msg(mi);
+                    mi ++;
+                    reuse = false;
+                }
+
+                list.push(<li key={i} className="list-group-item" style={style}>
+                            <span style={{minWidth: "5em", display: "inline-block"}}>
+                              <a href={this.state.h[0].prefix + obs[0]} target="_blank">{ obs[0] }</a>
+                            </span>
+
+                            <span style={{minWidth: "5em", display: "inline-block"}}>
+                              { !reuse ?
+                                <a href={this.state.h[6].prefix + obs[6]} target="_blank">{ obs[6] }</a>
+                                : ''
+                              }
+                            </span>
+
+                            <span style={{minWidth: "8em", display: "inline-block"}}>
+                              { !reuse ? obs[7] : '' }
+                            </span>
+
+                            <span style={{minWidth: "4em", display: "inline-block"}}>
+                              {obs[4]}
+                            </span>
+
+                            {unixtime(obs[2], false)}
+                            &emsp;&mdash;&emsp;
+                            {unixtime(obs[3], false)}
+
+                          </li>);
+                prev = obs;
+            }
+
+            // Messages after end of all observations
+            while (mi < this.state.messages.length) {
+                add_msg(mi);
+                mi ++;
+            }
+        }
+
+        if(this.observations_end.current && this.modal_body.current &&
+           this.observations_end.current.getBoundingClientRect().bottom <= this.modal_body.current.getBoundingClientRect().bottom + 10)
+            this.should_scroll = true;
+
+        this.should_update = false;
+
+        return (
+            <>
+              {/* Activator element */}
+              {this.props.activator &&
+               <span onClick={() => this.handleShow()}>
+                 {this.props.activator}
+               </span>
+              }
+              {!this.props.activator &&
+               <span className="glyphicon glyphicon-list" onClick={() => this.handleShow()} title="List of Observations"/>
+              }
+
+              {/* Modal window */}
+              <Modal bsSize="lg" show={this.state.show} onHide={() => this.handleHide()} onEntered={() => this.scrollToBottom()}>
+                <Modal.Header closeButton>
+                  <Modal.Title>{this.props.title ? this.props.title : "List of Observations : " + this.props.client.description}</Modal.Title>
+                </Modal.Header>
+                <div ref={this.modal_body}>
+                  <Modal.Body style={{'maxHeight': 'calc(100vh - 210px)', 'overflowY': 'auto', 'overflowX': 'auto', 'padding': 0, 'whiteSpace': 'nowrap'}}>
+                    {list.length ?
+                     <ul className="list-group">
+                       { list }
+                     </ul>
+                     : <p className="text-center">{this.state.error}</p>}
+                    <div className="ref" ref={this.observations_end} />
+                  </Modal.Body>
+                </div>
+                <Modal.Footer>
+                  <Button bsStyle="default" onClick={() => this.handleHide()}>Close</Button>
+                </Modal.Footer>
+              </Modal>
+            </>
+        );
+    }
+}
+
+ObsModal.defaultProps = {refresh:"30000"};
+ObsModal = ReactRedux.connect(mapStateToProps)(ObsModal);

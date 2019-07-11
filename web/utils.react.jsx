@@ -33,7 +33,7 @@ class UnixTime extends React.Component {
     render() {
         var unix = this.props.time;
 
-        return unixtime(unix);
+        return unixtime(unix, this.props.age);
     }
 
     componentDidMount() {
@@ -46,7 +46,7 @@ class UnixTime extends React.Component {
     }
 }
 
-UnixTime.defaultProps = {refresh:"500"};
+UnixTime.defaultProps = {refresh:"500", age:true};
 
 class ImageRefresh extends React.Component {
     constructor(props) {
