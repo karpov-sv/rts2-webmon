@@ -207,8 +207,11 @@ class WebMonitor(Resource):
             if args.has_key('username') and args.has_key('password') and args['username'][0] == self.object['api_username'] and args['password'][0] == self.object['api_password']:
                 print "Authorized session", request.getSession().uid
                 self.object['sessions'][request.getSession().uid] = args.get('username')
-                request.getSession().sessionTimeout = 24*3600*7
+                request.getSession().sessionTimeout = 24*3600*365
                 result = True
+                # Crude hack to keep the session cookie longer
+                cookiename = "_".join(['TWISTED_SESSION'] + request.sitepath)
+                request.addCookie(cookiename, request.getSession().uid, path='/', max_age=365*3600*24)
             else:
                 print "De-authorized session", request.getSession().uid
                 self.object['sessions'].pop(request.getSession().uid, None)
