@@ -72,9 +72,11 @@ class FramClient extends React.Component {
                     <div className="small text-muted" style={{padding: "5px"}}>
                       Night start <span className="text-info"><UnixTime time={status['centrald'].d.night_beginning}/></span> end <span className="text-info"><UnixTime time={status['centrald'].d.night_ending}/></span>.
 
-                      Moon rise <span className="text-info"><UnixTime time={status['centrald'].d.moon_rise}/></span> set <span className="text-info"><UnixTime time={status['centrald'].d.moon_set}/></span>.
+                      Sun alt <span className="text-info">{status['centrald'].d.sun_alt.toFixed(1)}</span> deg.
 
-                      Lunar phase <span className="text-info">{status['centrald'].d.lunar_phase.toFixed(1)}</span> deg, limb <span className="text-info">{status['centrald'].d.lunar_limb.toFixed(1)}</span> deg, altitude <span className="text-info">{status['centrald'].d.moon_alt.toFixed(1)}</span> deg
+                      Moon rise <span className="text-info"><UnixTime time={status['centrald'].d.moon_rise}/></span> set <span className="text-info"><UnixTime time={status['centrald'].d.moon_set}/></span>,
+
+                      phase <span className="text-info">{status['centrald'].d.lunar_phase.toFixed(1)}</span> deg, limb <span className="text-info">{status['centrald'].d.lunar_limb.toFixed(1)}</span> deg, alt <span className="text-info">{status['centrald'].d.moon_alt.toFixed(1)}</span> deg.
                     </div>
                 );
 
@@ -91,10 +93,20 @@ class FramClient extends React.Component {
                 if (status[name].connected) {
                     var vars = status[name].d;
                     var state = status[name].state;
+                    var statestring = status[name].statestring;
+
+                    statestring = statestring.replace("| SHUTTER_CLEARED", "");
+                    statestring = statestring.replace("| IMAGE_READY", "");
+                    // statestring = statestring.replace("BLOCK_OPEN", "!OPEN");
+                    // statestring = statestring.replace("BLOCK_CLOSE", "!CLOSE");
+                    // statestring = statestring.replace("BLOCK EXPOSURE", "!EXPOSE");
+                    statestring = statestring.replace("BLOCK TELESCOPE MOVEMENT", "BLOCK MOVE");
+                    statestring = statestring.replace("| not ending", "");
+
 
                     dev_name = <DeviceModal title={name + "   " + status[name].statestring} activator={name} variables={vars}/>;
 
-                    dev_body = status[name].statestring;
+                    dev_body = statestring;
 
                     // Color coding of states
                     if ((state & 0xf0000) == 0x40000)
@@ -142,6 +154,10 @@ class FramClient extends React.Component {
                             dev_sub.push(<span className="text-muted" key="camera_script_1">{s1}<mark>{s2}</mark>{s3}</span>);
                         else
                             dev_sub.push(<span className="text-muted" key="camera_script_1">{s1}{s2}{s3}</span>);
+
+                        // Latest image previewer
+                        if (this.props.auth && vars['last_preview_image'])
+                            dev_body = <>{dev_body}<span className="pull-right"><CameraModal name={name} client={client} activator={<span className="glyphicon glyphicon-picture" title="Latest image"/>} variables={vars}/></span></>;
                     }
 
                     // dome
@@ -156,9 +172,23 @@ class FramClient extends React.Component {
                                            Right open switch is off
                                          </span>);
 
+                        if (!(vars['sw_close_left']) && !(state & 0x06))
+                            dev_sub.push(<span className="label label-warning" key="sw_open_left">
+                                           Left close switch is off
+                                         </span>);
+
+                        if (!(vars['sw_close_right']) && !(state & 0x06))
+                            dev_sub.push(<span className="label label-warning" key="sw_open_right">
+                                           Right close switch is off
+                                         </span>);
+
                         if (vars['12V'] == 0 || vars['12VDC'] == 0)
                             dev_sub.push(<span className="label label-danger" key="12v_off">
                                            12V is off
+                                         </span>);
+                        if ((vars['48V'] == 0 || vars['48VDC'] == 0) && (client.name == 'cta-s1'))
+                            dev_sub.push(<span className="label label-danger" key="48v_off">
+                                           48V is off
                                          </span>);
                         if (vars['mount_is_on'] == 0 && (client.name == 'cta-n' || client.name == 'auger'))
                             dev_sub.push(<span className="label label-danger" key="mount_off">
@@ -185,12 +215,25 @@ class FramClient extends React.Component {
                             elem = (<span className="text-muted" key={'weather1'}>
                                       wind { (vars['windspeed']/3.6).toFixed(1) } m/s.
                                     </span>);
+                        else if (client.name == 'cta-s1')
+                            elem = (<span className="text-muted" key={'weather1'}>
+                                      wind { vars['WIND_AVG'].toFixed(1) } m/s.
+                                    </span>);
 
                         if (vars['rain'])
                             elem = [elem, <Label className="danger" key={'weather2'}>Rain</Label>];
 
                         if (elem)
                             dev_sub.push(elem);
+                    }
+
+                    if (name == 'PARANAL') {
+                        dev_sub.push(<span className="text-muted" key={'weather1'}>
+                                      wind { vars['windspeed'].toFixed(1) } m/s,
+                                      temperature { vars['temperature'].toFixed(1) } C,
+                                      humidity { vars['humidity'].toFixed(1) }%,
+                                      pressure { vars['pressure'].toFixed(1) }.
+                                    </span>);
                     }
 
                     // next-good-weather
@@ -205,8 +248,16 @@ class FramClient extends React.Component {
                                        next open: <UnixTime time={vars['next_open']}/>
                                      </span>);
 
+                    // executor
+                    if (type == 20) {
+                        if (vars['ignore_day'])
+                            dev_sub.push(<span className="label label-warning">Ignoring day</span>);
+                    }
+
                     // imgproc
                     if (type == 21) {
+                        if (!vars['apply_corrections'])
+                            dev_sub.push(<span className="label label-warning">Astrometric corrections disabled</span>);
                         if (vars['free_diskspace'] && vars['free_diskspace']/1024/1024/1024 < 10)
                             dev_sub.push(<span className="label label-danger">Low disk space: {(vars['free_diskspace']/1024/1024/1024).toFixed(1)} Gb</span>);
 
@@ -214,6 +265,8 @@ class FramClient extends React.Component {
 
                     // selector
                     if (type == 22) {
+                        if (vars['ignore_day'])
+                            dev_sub.push(<span className="label label-warning">Ignoring day</span>);
                         for (var qi = 0; qi < vars['queue_names'].length; qi++){
                             var queue = vars['queue_names'][qi];
                             var targets = [];
@@ -234,6 +287,12 @@ class FramClient extends React.Component {
                         dev_sub.push(<span className="text-muted" key={'auger1'}>
                                        last rejected:  <UnixTime time={vars['last_rejected']}/>, accepted:  <UnixTime time={vars['last_date']}/>
                                     </span>);
+                    }
+
+                    // UPS
+                    if (name == 'UPS') {
+                        if (vars['battery.charge'] && vars['battery.charge'] != 100)
+                            dev_sub.push(<span className="label label-danger">Battery {vars['battery.charge']} % : {vars['ups.status']}</span>);
                     }
                 }
 
@@ -257,26 +316,22 @@ class FramClient extends React.Component {
         // List of commands for Quick Command modal
         var commands = {'Centrald': {'Off': 'centrald.off', 'Standby': 'centrald.standby', 'On': 'centrald.on'}};
 
-        if (client.name == 'cta-n' || client.name == 'cta-s1')
-            commands['Mount'] = {'Park': 'T0.park', 'Stop': 'T0.stop'};
+        if (client.name == 'cta-n')
+            commands['Mount'] = {'Park': 'T0.park', 'Stop': 'T0.stop', 'Toggle': 'DOME.toggle_mount'};
         else if (client.name == 'auger')
-            commands['Mount'] = {'Park': 'GM2000.park', 'Stop': 'GM2000.stop'};
+            commands['Mount'] = {'Park': 'GM2000.park', 'Stop': 'GM2000.stop', 'Toggle': 'DOME.toggle_mount'};
+        else if (client.name == 'cta-s1')
+            commands['Mount'] = {'Park': 'T0.park', 'Stop': 'T0.stop', 'On': 'DOME.48VDC=1', 'Off': 'DOME.48VDC=0'};
 
-        var dcmds = {'Open': 'DOME.open', 'Close': 'DOME.close', 'Reset Emergency': 'DOME.reset_emergency', 'Toggle Mount': 'DOME.toggle_mount'};
+        commands['Dome'] = {'Open': 'DOME.open', 'Close': 'DOME.close', 'Reset Emergency': 'DOME.reset_emergency', 'Reset next': 'DOME.reset_next'};
+
         if (client.name == 'cta-n') {
-            dcmds['12V On'] = "DOME.12VDC=1";
-            dcmds['12V Off'] = "DOME.12VDC=0";
+            commands['12V'] = {'On': "DOME.12VDC=1", 'Off': "DOME.12VDC=0"};
         } else if (client.name == 'auger') {
-            dcmds['12V On'] = "DOME.12V=1";
-            dcmds['12V Off'] = "DOME.12V=0";
+            commands['12V'] = {'On': "DOME.12V=1", 'Off': "DOME.12V=0"};
         } else if (client.name == 'cta-s1') {
-            dcmds['12V On'] = "DOME.12VDC=1";
-            dcmds['12V Off'] = "DOME.12VDC=0";
-            dcmds['48V On'] = "DOME.48VDC=1";
-            dcmds['48V Off'] = "DOME.48VDC=0";
+            commands['12V'] = {'On': "DOME.12VDC=1", 'Off': "DOME.12VDC=0"};
         }
-
-        commands['Dome'] = dcmds;
 
         if (client.name == 'cta-n') {
             commands['C0'] = {'Cooling ON': 'C0.CCD_SET=-20', 'Cooling OFF': 'C0.CCD_SET=50'};
@@ -289,14 +344,18 @@ class FramClient extends React.Component {
         }
 
         if (client.name == 'cta-s1') {
+            commands['WF0'] = {'Cooling ON': 'WF0.CCD_SET=-20', 'Cooling OFF': 'WF0.CCD_SET=50'};
             commands['FWF'] = {'-100': 'FWF.FOC_TAR-=100', '-10': 'FWF.FOC_TAR-=10', '+10': 'FWF.FOC_TAR+=10', '+100': 'FWF.FOC_TAR+=100'};
         }
 
-        commands['EXEC'] = {'Stop': 'EXEC.stop', 'Ignore day ON': 'EXEC.ignore_day=1', 'Ignore day OFF': 'EXEC.ignore_day=0'};
+        commands['EXEC'] = {'Stop': 'EXEC.stop', 'Disable': 'EXEC.enabled=0', 'Enable': 'EXEC.enabled=1', 'Enable Next': 'EXEC.selector_next=1', 'Ignore day ON': 'EXEC.ignore_day=1', 'Ignore day OFF': 'EXEC.ignore_day=0'};
+        commands['Selector'] = {'Disable': 'SEL.selector_enabled=0', 'Enable': 'SEL.selector_enabled=1'};
+        commands['IMGP'] = {'Disable corrections': 'IMGP.apply_corrections=0', 'Enable corrections': 'IMGP.apply_corrections=1'};
 
         // Construct the component
         return (
-            <div>
+            // <Col md={12} style={{padding: '1px'}}>
+            // <div>
               <Panel expanded={client.connected}>
                 <Panel.Heading>
                   <Panel.Title componentClass='h3'>
@@ -345,7 +404,8 @@ class FramClient extends React.Component {
                   </div>
                 </Panel.Body>
               </Panel>
-           </div>
+            // </div>
+            // </Col>
         );
     }
 }
