@@ -21,10 +21,13 @@ function unixtime(unix, age=true) {
     if (unix) {
         var t = moment.unix(unix);
         var dt = moment.duration(t.diff(moment()));
+
+        t = t.format('YYYY-MM-DD HH:mm:ss ZZ');
+
         if (age)
-            return t.format('YYYY-MM-DD HH:mm:ss ZZ') + ' (' + dt.format() + ')';
+            return t + ' (' + dt.format() + ')';
         else
-            return t.format('YYYY-MM-DD HH:mm:ss ZZ');
+            return t;
     } else
         return "---";
 }

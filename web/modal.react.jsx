@@ -168,6 +168,10 @@ class LogModal extends React.Component {
                 var ctype = ({0x01: "danger", 0x02: "warning", 0x04: "default", 0x08: "info"})[msg[2] & 0x1f];
                 var style = {padding: '0.2em', paddingLeft: '0.5em', paddingRight: '0.5em'};
 
+                /* MESSAGE_REPORTIT */
+                if (msg[2] & 0x100000)
+                    ctype = "success";
+
                 if((type == 'I' && this.state.checkbox.info) ||
                    (type == 'W' && this.state.checkbox.warning) ||
                    (type == 'E' && this.state.checkbox.error) ||
@@ -539,7 +543,7 @@ class ObsModal extends React.Component {
                             {type}
                             &emsp;
                             {msg[3]}
-                          </li>)};
+                          </li>);};
 
             for (var i = 0; i < this.state.observations.length; i++) {
                 var obs = this.state.observations[i];
@@ -575,7 +579,7 @@ class ObsModal extends React.Component {
                             </span>
 
                             <span style={{minWidth: "4em", display: "inline-block"}}>
-                              {obs[4]}
+                              {obs[4] == obs[5] ? obs[4] : obs[4] + '/' + obs[5]}
                             </span>
 
                             {unixtime(obs[2], false)}
