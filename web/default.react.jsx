@@ -133,6 +133,15 @@ class DefaultClient extends React.Component {
                             dev_sub.push(<span className="text-muted" key="camera_script_1">{s1}<mark>{s2}</mark>{s3}</span>);
                         else
                             dev_sub.push(<span className="text-muted" key="camera_script_1">{s1}{s2}{s3}</span>);
+
+                        if (this.props.auth && vars['last_preview_image'])
+                        {
+                            var url = this.props.root + client.name + '/jpeg/' + vars.last_preview_image + '?time=' + vars.last_preview_time;
+                            var src = this.props.root + client.name + '/preview/' + vars.last_preview_image + '?ps=128&lb=&time=' + vars.last_preview_time;
+                            var title = <>Image on {name} at <UnixTime time={vars.last_preview_time}/></>;
+
+                            dev_body = <>{dev_body}<span className="pull-right"><CameraModal name={name} client={client} activator={<span className="glyphicon glyphicon-picture icon" title="Latest image"/>} variables={vars}/></span></>;
+                        }
                     }
 
                     // next-good-weather
@@ -169,6 +178,9 @@ class DefaultClient extends React.Component {
                             if (targets.length)
                                 dev_sub.push(<span>{queue}: {targets}</span>);
                         }
+
+                        // if (this.props.auth)
+                        //     dev_body = <>{dev_body}<span className="pull-right"><QueueModal name={name} client={client} activator={<span className="glyphicon glyphicon-list-alt icon" title="Queues Editor"/>}/></span></>;
                     }
                 }
 
@@ -212,7 +224,11 @@ class DefaultClient extends React.Component {
 
                        <span style={{marginLeft:"0.5em"}}/>
 
-                       <span className="glyphicon glyphicon-picture" onClick={()=>window.open(this.props.root + client.name + '/preview/', '_blank')} title="Image Previews"/>
+                       <QueueModal name='SEL' client={client} />
+
+                       <span style={{marginLeft:"0.5em"}}/>
+
+                       <span className="glyphicon glyphicon-picture icon" onClick={()=>window.open(this.props.root + client.name + '/preview/', '_blank')} title="Image Previews"/>
 
                        <span style={{marginLeft:"0.5em"}}/>
 

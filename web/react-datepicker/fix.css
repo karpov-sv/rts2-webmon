@@ -1,0 +1,21 @@
+/* */
+
+.react-datepicker-popper {
+    z-index: 2;
+    top: 0px !important;
+    /* needed because we made it inline */
+}
+
+.react-datepicker-wrapper,
+.react-datepicker-wrapper .react-datepicker__input-container {
+    /* https://github.com/Hacker0x01/react-datepicker/issues/1672 */
+    width: 100%;
+
+    /* to make it exactly the same height as the bootstrap input-group-addons */
+    display: inline;
+}
+
+.react-datepicker__time-list {
+    padding-right: 0;
+    padding-left: 0;
+}

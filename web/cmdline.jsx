@@ -86,7 +86,7 @@ class CmdLine extends React.Component {
         this.setState({message: "", disabled: true});
 
         $.ajax({
-            url: this.props.root + this.props.client.name + "/api/"+cmd,
+            url: this.props.root + this.props.client.name + "/api/" + cmd,
             dataType : "json",
             timeout : 10000,
             context: this,

@@ -98,10 +98,28 @@ function isEmpty(obj) {
     return true;
 }
 
-
 function deepCopy(obj) {
     if(isArray(obj))
         return obj.slice(0);
 
     return jQuery.extend(true, {}, obj);
+}
+
+function toSexa(value, hms=false, plus=false, sep=":", lastdigits=2) {
+    var sign = Math.sign(value);
+
+    value = Math.abs(value);
+
+    var v1 = Math.floor(value);
+    var v2 = Math.floor(value*60 - v1*60);
+    var v3 = value*3600 - v1*3600 - v2*60;
+
+    var result = (sign < 0) ? "-" : (plus ? "+" : "");
+
+    if (hms)
+        result += sprintf("%02dh%02dm%0"+(lastdigits+3)+"."+lastdigits+"f", v1, v2, v3);
+    else
+        result += sprintf("%02d%s%02d%s%0"+(lastdigits+3)+"."+lastdigits+"f", v1, sep, v2, sep, v3);
+
+    return result;
 }
