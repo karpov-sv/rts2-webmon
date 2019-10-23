@@ -15,3 +15,11 @@
   color: inherit;
   text-decoration: inherit;
 }
+
+.icon  {
+    color: gray;
+}
+
+.icon:hover {
+  color: black;
+}

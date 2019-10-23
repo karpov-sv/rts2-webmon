@@ -192,7 +192,7 @@ class LogModal extends React.Component {
                </span>
               }
               {!this.props.activator &&
-               <span className="glyphicon glyphicon-console" onClick={() => this.handleShow()} title="Messages Log + Command Line"/>
+               <span className="glyphicon glyphicon-console icon" onClick={() => this.handleShow()} title="Messages Log + Command Line"/>
               }
 
               {/* Modal window */}
@@ -296,10 +296,10 @@ class AuthModal extends React.Component {
               {!this.props.activator && this.props.auth &&
                <>
                  Logged in as <strong>{this.props.username}</strong>.
-                 <a onClick={() => this.handleLogout()}><span className="glyphicon glyphicon-log-out"/> Log out</a>
+                 <a onClick={() => this.handleLogout()}><span className="glyphicon glyphicon-log-out icon"/> Log out</a>
                </>}
               {!this.props.activator && !this.props.auth &&
-               <a onClick={() => this.handleShow()}><span className="glyphicon glyphicon-log-in"/> Log in</a>
+               <a onClick={() => this.handleShow()}><span className="glyphicon glyphicon-log-in icon"/> Log in</a>
               }
 
               {/* Modal window */}
@@ -407,7 +407,7 @@ class CmdModal extends React.Component {
                  {this.props.activator}
                </span>}
               {!this.props.activator && this.props.auth &&
-               <span className="glyphicon glyphicon-cog" onClick={() => this.handleShow()} title="Quick Commands"/>
+               <span className="glyphicon glyphicon-cog icon" onClick={() => this.handleShow()} title="Quick Commands"/>
               }
 
               {/* Modal window */}
@@ -612,7 +612,7 @@ class ObsModal extends React.Component {
                </span>
               }
               {!this.props.activator &&
-               <span className="glyphicon glyphicon-list" onClick={() => this.handleShow()} title="List of Observations"/>
+               <span className="glyphicon glyphicon-list icon" onClick={() => this.handleShow()} title="List of Observations"/>
               }
 
               {/* Modal window */}
