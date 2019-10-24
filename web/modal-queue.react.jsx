@@ -330,28 +330,39 @@ class QueueModal extends React.Component {
                   </FormGroup>
 
                   <FormGroup>
-                    <InputGroup>
-                      <InputGroup.Addon className="input-group-prepend">
-                        <span className="input-group-text">Start Time:</span>
-                      </InputGroup.Addon>
+                    <Row  style={{padding: 0, paddingLeft: "15px", paddingRight: "15px"}}>
 
-                      <ReactDatePicker selected={this.state.time1} onChange={(time)=>this.setState({time1:fix(time)})}
-                                       placeholderText=" --- " showTimeSelect dateFormat='YYYY-MM-DD HH:mm:ss ZZ'
-                                       timeFormat='HH:mm:ss'
-                                       className="form-control" popperPlacement="top" minDate={new Date()} />
+                      <Col md={6}  style={{padding: 0}}>
+                        <InputGroup>
+                          <InputGroup.Addon className="input-group-prepend">
+                            <span className="input-group-text">Start Time:</span>
+                          </InputGroup.Addon>
 
-                      <InputGroup.Addon className="input-group-prepend">
-                        <span className="input-group-text">End Time:</span>
-                      </InputGroup.Addon>
+                          <ReactDatePicker selected={this.state.time1} onChange={(time)=>this.setState({time1:fix(time)})}
+                                           onChangeRaw={(x)=>{if(moment(x.target.value, 'YYYY-MM-DD HH:mm:ss ZZ').isValid()) this.setState({time1: moment(x.target.value, 'YYYY-MM-DD HH:mm:ss ZZ')});}}
+                                           placeholderText=" --- " showTimeSelect dateFormat='YYYY-MM-DD HH:mm:ss ZZ'
+                                           timeFormat='HH:mm:ss' disabledKeyboardNavigation
+                                           className="form-control" popperPlacement="top-end" minDate={new Date()} />
 
-                      <ReactDatePicker selected={this.state.time2} onChange={(time)=>this.setState({time2:fix(time)})}
-                                       onTimeChange={(x)=>console.log(x)}
-                                       placeholderText=" --- " showTimeSelect dateFormat='YYYY-MM-DD HH:mm:ss ZZ'
-                                       timeFormat='HH:mm:ss'
-                                       className="form-control" popperPlacement="top" minDate={new Date()} />
+                        </InputGroup>
+                      </Col>
 
-                    </InputGroup>
+                      <Col md={6} style={{padding: 0}}>
+                        <InputGroup>
+                          <InputGroup.Addon className="input-group-prepend">
+                            <span className="input-group-text">End Time:</span>
+                          </InputGroup.Addon>
 
+                          <ReactDatePicker selected={this.state.time2} onChange={(time)=>this.setState({time2:fix(time)})}
+                                           onChangeRaw={(x)=>{if(moment(x.target.value, 'YYYY-MM-DD HH:mm:ss ZZ').isValid()) this.setState({time2: moment(x.target.value, 'YYYY-MM-DD HH:mm:ss ZZ')});}}
+                                           placeholderText=" --- " showTimeSelect dateFormat='YYYY-MM-DD HH:mm:ss ZZ'
+                                           timeFormat='HH:mm:ss' disabledKeyboardNavigation
+                                           className="form-control" popperPlacement="top-end" minDate={new Date()} />
+
+                        </InputGroup>
+                      </Col>
+
+                    </Row>
                   </FormGroup>
                   {this.state.message ? this.state.message : ""}
 
