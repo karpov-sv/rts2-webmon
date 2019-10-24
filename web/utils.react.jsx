@@ -105,8 +105,14 @@ function deepCopy(obj) {
     return jQuery.extend(true, {}, obj);
 }
 
-function toSexa(value, hms=false, plus=false, sep=":", lastdigits=2) {
+function toSexa(value, mode='deg', plus=false, sep=":", lastdigits=2) {
     var sign = Math.sign(value);
+    var seps = [sep, sep, ''];
+
+    if (mode == 'dms')
+        seps = ['d', 'm', 's'];
+    if (mode == 'hms')
+        seps = ['h', 'm', 's'];
 
     value = Math.abs(value);
 
@@ -116,10 +122,7 @@ function toSexa(value, hms=false, plus=false, sep=":", lastdigits=2) {
 
     var result = (sign < 0) ? "-" : (plus ? "+" : "");
 
-    if (hms)
-        result += sprintf("%02dh%02dm%0"+(lastdigits+3)+"."+lastdigits+"f", v1, v2, v3);
-    else
-        result += sprintf("%02d%s%02d%s%0"+(lastdigits+3)+"."+lastdigits+"f", v1, sep, v2, sep, v3);
+    result += sprintf("%02d%s%02d%s%0"+(lastdigits+3)+"."+lastdigits+"f%s", v1, seps[0], v2, seps[1], v3, seps[2]);
 
     return result;
 }

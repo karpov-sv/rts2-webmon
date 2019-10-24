@@ -1,7 +1,10 @@
-function parseCommand(command) {
+function parseCommand(command, name=null) {
     var m;
     var cmd;
     var data;
+
+    if(name && name.length && !command.includes('.'))
+        command = name + '.' + command;
 
     if(m = /^\s*(\w+)\.(\w+)\s*\+\=\s*(\w+)\s*$/.exec(command)) {
         cmd = 'inc';
@@ -74,7 +77,7 @@ class CmdLine extends React.Component {
     sendCommand(command) {
         var cmd;
         var data;
-        var m = parseCommand(command);
+        var m = parseCommand(command, this.props.name);
 
         if(m)
             [cmd,data] = m;
@@ -113,12 +116,13 @@ class CmdLine extends React.Component {
     }
 
     render() {
+        var placeholder = this.props.name ? 'Command or Device.Command' : 'Device.Command';
         return (
             <>
               <Form onSubmit={evt => this.handleSubmit(evt)}>
                 <InputGroup>
                   <InputGroup.Addon>Cmd:</InputGroup.Addon>
-                  <FormControl id="command" type="text" value={this.state.command} placeholder="Device.Command" autoFocus onChange={evt => this.handleChange(evt)} onKeyDown={evt => this.handleKeyPress(evt)} autoComplete='off'/>
+                  <FormControl id="command" type="text" value={this.state.command} placeholder={placeholder} autoFocus onChange={evt => this.handleChange(evt)} onKeyDown={evt => this.handleKeyPress(evt)} autoComplete='off'/>
                   <InputGroup.Addon><span className={this.state.ret ? "text-danger" : "text-success"}>{this.state.message}</span></InputGroup.Addon>
                   <InputGroup.Button><Button onClick={evt => this.handleSubmit(evt)}>Send</Button></InputGroup.Button>
                 </InputGroup>

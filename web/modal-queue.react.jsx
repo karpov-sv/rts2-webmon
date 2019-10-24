@@ -149,7 +149,7 @@ class QueueModal extends React.Component {
             var tgt = this.state.targets[i];
 
             if (tgt[0] == id) {
-                this.message(tgt[0] + ' / ' + tgt[1] + ' at ' + toSexa(tgt[2]/15, false, false, ":", 3) + ' ' + toSexa(tgt[3], false, true, ":", 2), 'text-success');
+                this.message(tgt[0] + ' / ' + tgt[1] + ' at ' + toSexa(tgt[2]/15, 'deg', false, ":", 3) + ' ' + toSexa(tgt[3], 'deg', true, ":", 2), 'text-success');
                 return;
             }
         }

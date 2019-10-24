@@ -85,7 +85,10 @@ class DefaultClient extends React.Component {
                     var vars = status[name].d;
                     var state = status[name].state;
 
-                    dev_name = <DeviceModal title={name + "   " + status[name].statestring} activator={name} variables={vars}/>;
+                    if (this.props.auth)
+                        dev_name = <DeviceModalExt name={name} client={client} activator={name} />;
+                    else
+                        dev_name = <DeviceModal title={name + "   " + status[name].statestring} activator={name} variables={vars}/>;
 
                     dev_body = status[name].statestring;
 
@@ -178,9 +181,6 @@ class DefaultClient extends React.Component {
                             if (targets.length)
                                 dev_sub.push(<span>{queue}: {targets}</span>);
                         }
-
-                        // if (this.props.auth)
-                        //     dev_body = <>{dev_body}<span className="pull-right"><QueueModal name={name} client={client} activator={<span className="glyphicon glyphicon-list-alt icon" title="Queues Editor"/>}/></span></>;
                     }
                 }
 
@@ -252,7 +252,7 @@ class DefaultClient extends React.Component {
                         }
                         {client.links &&
                          <div className="text-center">
-                         {Object.keys(client.links).map((l,i) => {return <Link key={i} name={client.links[l].name} url={client.links[l].url}/>})}
+                           {Object.keys(client.links).map((l,i) => {return <Link key={i} name={client.links[l].name} url={client.links[l].url}/>})}
                          </div>
                         }
                       </Col>
