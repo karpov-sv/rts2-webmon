@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 from twisted.internet import reactor, task
 from twisted.protocols.basic import LineReceiver
-from twisted.web.server import Site
-from twisted.web.resource import Resource
+from twisted.web.server import Site, GzipEncoderFactory
+from twisted.web.resource import Resource, EncodingResourceWrapper
 from twisted.web.static import File
 from twisted.web.client import Agent, readBody
 from twisted.web.http_headers import Headers
@@ -280,7 +280,8 @@ class ReverseProxyResourceAuth(ReverseProxyResource):
         return ReverseProxyResource.render(self, request)
 
     def getChild(self, path, request):
-        return ReverseProxyResourceAuth(self.host, self.port, self.path + b'/' + urlquote(path, safe=b"").encode('utf-8'), reactor=self.reactor, username=self._username, password=self._password, base=self._base)
+        child = ReverseProxyResourceAuth(self.host, self.port, self.path + b'/' + urlquote(path, safe=b"").encode('utf-8'), reactor=self.reactor, username=self._username, password=self._password, base=self._base)
+        return EncodingResourceWrapper(child, [GzipEncoderFactory()])
 
 def loadINI(filename, obj):
     # We use ConfigObj library, docs: http://configobj.readthedocs.io/en/latest/index.html
@@ -404,7 +405,7 @@ if __name__ == '__main__':
 
     root = File("web")
     root.putChild("", File('web/main.html'))
-    root.putChild("monitor", webmon)
+    root.putChild("monitor", EncodingResourceWrapper(webmon, [GzipEncoderFactory()]))
 
     root.putChild("all.jsx", ServeFiles('web/*.jsx'))
 

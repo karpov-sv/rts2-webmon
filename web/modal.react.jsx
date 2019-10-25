@@ -56,6 +56,7 @@ class LogModal extends React.Component {
             dataType : "json",
             timeout : 10000,
             context: this,
+            data: {from: this.last, random: now()},
 
             success: function(json){
                 var messages = deepCopy(this.state.messages);
