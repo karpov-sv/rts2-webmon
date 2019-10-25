@@ -126,3 +126,21 @@ function toSexa(value, mode='deg', plus=false, sep=":", lastdigits=2) {
 
     return result;
 }
+
+function fromSexa(value) {
+    var s = value.trim().split(/[\s\:hms]+/);
+    var sign = 1;
+    var mul = 1;
+    var result = 0;
+
+    for (var i in s) {
+        if (s[i] < 0)
+            sign = -1;
+
+        result += Math.abs(s[i])*mul;
+
+        mul /= 60;
+    }
+
+    return result*sign;
+}
