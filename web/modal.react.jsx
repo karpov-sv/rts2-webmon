@@ -62,9 +62,10 @@ class LogModal extends React.Component {
                 var messages = deepCopy(this.state.messages);
 
                 for (var i = 0; i < json.d.length; i++)
-                    if (json.d[i][0] > this.last) {
+                    // if (json.d[i][0] > this.last) {
+                    if (true) {
                         messages.push(json.d[i]);
-                        this.last = json.d[i][0];
+                        this.last = Math.max(this.last, json.d[i][0]);
 
                         if (messages.length > 1000)
                             // Keep the length of messages reasonable
@@ -80,7 +81,11 @@ class LogModal extends React.Component {
 
             complete: function(xhr, status) {
                 clearTimeout(this.timer);
-                this.timer = setTimeout($.proxy(this.requestState, this), this.props.refresh);
+
+                if(this.state.show)
+                    this.timer = setTimeout($.proxy(this.requestState, this), this.props.refresh);
+                else
+                    this.timer = setTimeout($.proxy(this.requestState, this), 30000.0);
             }
         });
     }
@@ -96,6 +101,7 @@ class LogModal extends React.Component {
     handleShow() {
         this.setState({show: true});
         this.should_scroll = true;
+        this.request_state();
     }
 
     render() {
