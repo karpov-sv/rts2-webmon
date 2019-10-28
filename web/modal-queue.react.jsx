@@ -2,14 +2,11 @@
 class QueueModal extends React.Component {
     constructor(props, context) {
         super(props, context);
-        this.state = {show: false, targets: [], htargets: [], selectable: [], error: null, target_selected: null, message: null, queue: null, inprogress: false, vars: null, time1: null, time2: null, autoOpen: false};
+        this.state = {show: false, targets: [], htargets: [], selectable: [], error: null, target_selected: null, message: null, queue: null, inprogress: false, vars: null, time1: null, time2: null, autoOpen: false, showNew: false};
     }
 
     requestTargets() {
         if(!this.props.auth)
-            return;
-
-        if (this.state.targets.length > 0)
             return;
 
         this.message("Loading target information...", "text-default");
@@ -96,7 +93,7 @@ class QueueModal extends React.Component {
         });
     }
 
-    sendCommandEx(cmd, data) {
+    sendCommandEx(cmd, data, onSuccess) {
         $.ajax({
             url: this.props.root + this.props.client.name + "/api/" + cmd,
             dataType : "json",
@@ -109,9 +106,11 @@ class QueueModal extends React.Component {
                     this.message(json.ret + ' ' + cmd, 'text-success');
                 else if (json.ret != null)
                     this.message(json.ret + ' ' + cmd + ' ' + JSON.stringify(data), 'text-danger');
+                else
+                    this.message(JSON.stringify(json), 'text-success');
 
-                if(this.props.onSuccess)
-                    this.props.onSuccess();
+                if(onSuccess)
+                    onSuccess();
             },
 
             error: function(){
@@ -361,6 +360,8 @@ class QueueModal extends React.Component {
 
         }
 
+        window.qstate = this.state;
+
         return (
             <>
               {/* Activator element */}
@@ -421,7 +422,7 @@ class QueueModal extends React.Component {
 
                       <InputGroup.Button className="input-group-append">
                         <Button title="Display target information in a new window"
-                                disabled={this.state.target_selected == null}
+                                disabled={!this.state.target_selected || !this.state.target_selected.length}
                                 className="btn-outline-secondary"
                                 onClick={() => this.handleInfo()}>
                           Info
@@ -430,7 +431,7 @@ class QueueModal extends React.Component {
 
                       <InputGroup.Button className="input-group-append">
                         <Button title="Enable target for automatic scheduling"
-                                disabled={this.state.target_selected == null}
+                                disabled={!this.state.target_selected || !this.state.target_selected.length}
                                 className="btn-outline-secondary"
                                 onClick={() => this.handleTargetEnable(this.state.target_selected[0].id)}>
                           Enable
@@ -439,7 +440,7 @@ class QueueModal extends React.Component {
 
                       <InputGroup.Button className="input-group-append">
                         <Button title="Queue selected target"
-                                disabled={this.state.target_selected == null}
+                                disabled={!this.state.target_selected || !this.state.target_selected.length}
                                 className="btn-outline-secondary"
                                 onClick={() => this.handleQueue()}>
                           Queue
@@ -483,8 +484,14 @@ class QueueModal extends React.Component {
 
                     </Row>
                   </FormGroup>
+
+                  {this.state.showNew &&
+                   <NewTarget command={(cmd,data) => this.sendCommandEx(cmd,data,()=>this.requestTargets())} onClose={() => this.setState({showNew: false})}/>
+                  }
+
                   {this.state.message ? this.state.message : ""}
 
+                  <Button bsStyle="default" onClick={() => this.setState({showNew: !this.state.showNew})}>{this.state.showNew ? "Hide New Target" : "New Target"}</Button>
                   <Button bsStyle="default" onClick={() => this.handleHide()}>Close</Button>
                 </Modal.Footer>
               </Modal>
@@ -501,3 +508,50 @@ function fix(time) {
 
 QueueModal.defaultProps = {refresh:"10000"};
 QueueModal = ReactRedux.connect(mapStateToProps)(QueueModal);
+
+class NewTarget extends React.Component {
+    constructor(props, context) {
+        super(props, context);
+        this.state = {id: null, name: null, coords: null};
+    }
+
+    handleChange(evt, id) {
+        if (id == 'id')
+            this.setState({id: evt.target.value});
+        if (id == 'name')
+            this.setState({name: evt.target.value});
+        if (id == 'coords')
+            this.setState({coords: evt.target.value});
+    }
+
+    handleCreate() {
+        if (this.state.id)
+            this.props.command('create_target', {id: this.state.id, tn: this.state.name, ts: this.state.coords});
+        else
+            this.props.command('create_target', {tn: this.state.name, ts: this.state.coords});
+
+        this.props.onClose();
+    }
+
+    render() {
+        return <>
+                 <Form>
+                   <InputGroup>
+                     <InputGroup.Addon>New Target:</InputGroup.Addon>
+
+                     <FormControl placeholder="Id" onChange={(e) => this.handleChange(e, "id")} style={{minWidth: "6em"}}/>
+                     <span className="input-group-addon" style={{width: 0, padding: 0}}/>
+                     <FormControl placeholder="Name" onChange={(e) => this.handleChange(e, "name")}/>
+                     <span className="input-group-addon" style={{width: 0, padding: 0}}/>
+                     <FormControl placeholder="Coordinates or SIMBAD or MPC" onChange={(e) => this.handleChange(e, "coords")}/>
+                     {/* <InputGroup.Button> */}
+                     {/*   <Button onClick={() => this.props.onClose()}>Close</Button> */}
+                     {/* </InputGroup.Button> */}
+                     <InputGroup.Button>
+                       <Button onClick={() => this.handleCreate()}>Create</Button>
+                     </InputGroup.Button>
+                   </InputGroup>
+                 </Form>
+               </>;
+    }
+}
