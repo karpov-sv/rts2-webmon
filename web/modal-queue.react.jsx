@@ -2,7 +2,7 @@
 class QueueModal extends React.Component {
     constructor(props, context) {
         super(props, context);
-        this.state = {show: false, targets: [], htargets: [], error: null, target_selected: null, message: null, queue: null, inprogress: false, vars: null, time1: null, time2: null};
+        this.state = {show: false, targets: [], htargets: [], selectable: [], error: null, target_selected: null, message: null, queue: null, inprogress: false, vars: null, time1: null, time2: null, autoOpen: false};
     }
 
     requestTargets() {
@@ -68,13 +68,35 @@ class QueueModal extends React.Component {
         });
     }
 
-    sendCommand(command, device=this.props.name) {
-        var cmd = 'cmd';
-        var data = {d: device, c: command};
+    requestSelectable() {
+        if(!this.props.auth)
+            return;
 
-        this.message(command);
-        this.setState({inprogress: true});
+        $.ajax({
+            url: this.props.root + this.props.client.name + "/api/tslist",
+            dataType : "json",
+            timeout : 10000,
+            context: this,
+            data: {b: 1},
 
+            success: function(json){
+                this.setState({selectable: json.d});
+            },
+
+            error: function(){
+                this.message("API request error while loading selectable targets", "text-error");
+            },
+
+            complete: function(){
+                clearTimeout(this.stimer);
+
+                if (this.state.show)
+                    this.stimer = setTimeout($.proxy(this.requestSelectable, this), this.props.refresh);
+            }
+        });
+    }
+
+    sendCommandEx(cmd, data) {
         $.ajax({
             url: this.props.root + this.props.client.name + "/api/" + cmd,
             dataType : "json",
@@ -83,29 +105,42 @@ class QueueModal extends React.Component {
             data: data,
 
             success: function(json){
-                this.message(json.ret + ' ' + command, 'text-success');
+                if (json.ret == 0)
+                    this.message(json.ret + ' ' + cmd, 'text-success');
+                else if (json.ret != null)
+                    this.message(json.ret + ' ' + cmd + ' ' + JSON.stringify(data), 'text-danger');
+
                 if(this.props.onSuccess)
                     this.props.onSuccess();
             },
 
             error: function(){
-                this.message("API request error: " + device + ' ' + command, 'text-danger');
+                this.message("API request error: " + cmd + " " + JSON.stringify(data), 'text-danger');
             },
 
             complete: function(){
-                this.setState({inprogress: false});
                 this.requestState();
+                this.requestSelectable();
             }
         });
     }
 
+    sendCommand(command, device=this.props.name) {
+        this.message(command);
+        this.sendCommandEx('cmd', {d: device, c: command});
+    }
+
     componentDidMount() {
-        // this.requestState();
-        // this.requestTargets();
+        if (this.state.show) {
+            this.requestState();
+            this.requestTargets();
+            this.requestSelectable();
+        }
     }
 
     componentWillUnmount() {
         clearTimeout(this.timer);
+        clearTimeout(this.stimer);
     }
 
     shouldComponentUpdate(nextProps, nextState) {
@@ -131,17 +166,19 @@ class QueueModal extends React.Component {
     }
 
     handleShow() {
-        this.setState({show: true, message: null, target_selected: null});
+        this.setState({show: true, message: null, target_selected: null, autoOpen: false});
 
         if (this.state.targets.length == 0)
             this.requestTargets();
 
         this.requestState();
+        this.requestSelectable();
     }
 
     handleHide() {
         this.setState({show: false});
         clearTimeout(this.timer);
+        clearTimeout(this.stimer);
     }
 
     showInfo(id) {
@@ -159,7 +196,6 @@ class QueueModal extends React.Component {
 
     handleInfo() {
         var id = this.state.target_selected[0].id;
-        // console.log('info', id);
         window.open(this.props.root + this.props.client.name + '/targets/' + id, '_blank');
     }
 
@@ -169,22 +205,38 @@ class QueueModal extends React.Component {
         var t2 = this.state.time2 ? this.state.time2.unix() : "nan";
 
         if (t1 || t2) {
-            // console.log('queue_at ' + this.state.queue + ' ' + id + ' ' + t1 + ' ' + t2);
             this.sendCommand('queue_at ' + this.state.queue + ' ' + id + ' ' + t1 + ' ' + t2);
         } else {
-            // console.log('queue', this.state.target_selected, this.state.queue);
             this.sendCommand('queue ' + this.state.queue + ' ' + id);
         }
     }
 
     handleQueueRemove(queue, id) {
-        // console.log('remove', queue, id);
         this.sendCommand('remove ' + queue + ' ' + id);
     }
 
     handleQueueMove(queue, id1, id2) {
-        // console.log('move', queue, id1, id2);
         this.sendCommand('move ' + queue + ' ' + id1 + ' ' + id2);
+    }
+
+    handleTargetDisable(id) {
+        this.sendCommandEx('update_target', {id: id, enabled: 0});
+    }
+
+    handleTargetEnable(id) {
+        this.sendCommandEx('update_target', {id: id, enabled: 1});
+    }
+
+    handleTargetRestart(id) {
+        this.sendCommandEx('update_target', {id: id, next_observable: 0});
+    }
+
+    handleTargetPostpone(id, delay) {
+        this.sendCommandEx('update_target', {id: id, next_observable: now() + delay});
+    }
+
+    handleTargetPriority(id, priority) {
+        this.sendCommandEx('update_target', {id: id, priority: priority});
     }
 
     render() {
@@ -205,6 +257,7 @@ class QueueModal extends React.Component {
         var queue_names = [];
 
         if (vars) {
+            // Normal queues
             for (var qi = 0; qi < vars['queue_names'].length; qi++){
                 var queue = (' ' + vars['queue_names'][qi]).slice(1);
                 var targets = [];
@@ -214,6 +267,9 @@ class QueueModal extends React.Component {
 
                 if (this.state.queue == null)
                     this.state.queue = queue;
+
+                if (!vars[queue+'_ids'].length)
+                    continue;
 
                 queue_names.push(queue);
 
@@ -232,21 +288,77 @@ class QueueModal extends React.Component {
                 }
 
                 queues.push(
-                    <><h3 style={{margin: '0.5em'}}>{queue}</h3>
-                      <ul className="list-group" style={{padding: "0.1em"}}>
-                        {targets.map((d,i) => {
-                            return <li className="list-group-item" key={i}>{d}
-                                     <span className="pull-right">
-                                       <span className="glyphicon glyphicon-chevron-up icon" title="Move up" onClick={this.handleQueueMove.bind(this, queue, i, i-1)}/>
-                                       <span style={{marginLeft:"0.5em"}}/>
-                                       <span className="glyphicon glyphicon-chevron-down icon" title="Move down" onClick={this.handleQueueMove.bind(this, queue, i, i+1)}/>
-                                       <span style={{marginLeft:"0.5em"}}/>
-                                       <span className="glyphicon glyphicon-remove icon" title="Remove from queue" onClick={this.handleQueueRemove.bind(this, queue, i)}/>
-                                     </span>
-                                   </li>;})}
-                      </ul>
+                    <><h3 style={{margin: '0.2em'}}>{queue}</h3>
+                      {targets.length > 0 &&
+                       <ul className="list-group" style={{padding: "0.1em", margin: "0.1em"}}>
+                         {targets.map((d,i) => {
+                             return <li className="list-group-item" key={i} style={{padding: "5px 5px"}}>{d}
+                                      <span className="pull-right">
+                                        <span className="glyphicon glyphicon-chevron-up icon" title="Move up" style={{marginLeft:"0.5em"}} onClick={this.handleQueueMove.bind(this, queue, i, i-1)}/>
+                                        <span className="glyphicon glyphicon-chevron-down icon" title="Move down" style={{marginLeft:"0.5em"}} onClick={this.handleQueueMove.bind(this, queue, i, i+1)}/>
+                                        <span className="glyphicon glyphicon-remove icon" title="Remove from queue" style={{marginLeft:"0.5em"}} onClick={this.handleQueueRemove.bind(this, queue, i)}/>
+                                      </span>
+                                    </li>;})}
+                       </ul>
+                      }
                     </>);
             }
+
+            // Selectable/enabled targets
+            var stargets = [];
+            for (var ti = 0; ti < this.state.selectable.length; ti++){
+                var t = this.state.selectable[ti];
+                var color = "black";
+
+                if (t[7] > now ())
+                    color = "gray";
+
+                var item = <span style={{color: color}}>
+                             <span style={{minWidth: "5em", marginRight: "1em", display: "inline-block"}}>
+                               <a href={this.props.root + this.props.client.name + '/targets/' + t[0]} target='_blank'>{t[0]}</a>
+                             </span>
+                             <span style={{minWidth: "4em", marginRight: "1em", display: "inline-block"}} title={"Priority " + t[6]}>
+                               <EditableValue value={t[5] ? t[5].toFixed(1) : '-'} evalue={t[6]} onChange={this.handleTargetPriority.bind(this, t[0])}/>
+                             </span>
+                             <span style={{marginRight: "1em", display: "inline-block"}}>
+                               {t[1]}
+                             </span>
+
+                               {t[7] > now () &&
+                                <span className="text-right">
+                                  <span className="glyphicon glyphicon-hourglass" style={{marginRight: "0.2em"}}/>
+                                  <UnixTime time={t[7]}/>
+                                </span>
+                               }
+                           </span>;
+
+                stargets.push(item);
+            }
+            queues.push(
+                <><h3 style={{margin: '0.2em'}} onClick={()=>this.setState({autoOpen: !this.state.autoOpen})}>
+                    Automatic selector
+                    {this.state.autoOpen ?
+                     <span className="caret rotate-180"/> :
+                     <span className="caret"/>}
+                  </h3>
+                  <Collapse in={this.state.autoOpen}>
+                    <div>
+                      {stargets.length > 0 &&
+                       <ul className="list-group" style={{padding: "0.1em", margin: "0.1em"}}>
+                         {stargets.map((d,i) => {
+                             return <li className="list-group-item" key={i} style={{padding: "5px 5px"}}>{d}
+                                      <span className="pull-right">
+                                        <span className="glyphicon glyphicon-ok icon" title="Reset" style={{marginLeft:"0.5em"}} onClick={this.handleTargetRestart.bind(this, this.state.selectable[i][0])}/>
+                                        <span className="glyphicon glyphicon-ban-circle icon" title="Postpone for 1 hour" style={{marginLeft:"0.5em"}} onClick={this.handleTargetPostpone.bind(this, this.state.selectable[i][0], 3600)}/>
+                                        <span className="glyphicon glyphicon-remove icon" title="Disable" style={{marginLeft:"0.5em"}} onClick={this.handleTargetDisable.bind(this, this.state.selectable[i][0])}/>
+                                      </span>
+                                    </li>;})}
+                       </ul>
+                      }
+                    </div>
+                  </Collapse>
+                </>);
+
         }
 
         return (
@@ -268,9 +380,7 @@ class QueueModal extends React.Component {
                 </Modal.Header>
 
                 <Modal.Body style={{'maxHeight': 'calc(100vh - 210px)', 'overflowY': 'auto', 'overflowX': 'auto', 'padding': 0}}>
-                  <ul className="list-group">
-                    {queues.map((d,i) => {return <li style={{padding: "0.2em"}} className="list-group-item" key={i} >{d}</li>;})}
-                  </ul>
+                  {queues.map((d,i) => {return <div style={{padding: "0.2em"}} key={i} >{d}</div>;})}
                 </Modal.Body>
 
                 <Modal.Footer>
@@ -315,6 +425,15 @@ class QueueModal extends React.Component {
                                 className="btn-outline-secondary"
                                 onClick={() => this.handleInfo()}>
                           Info
+                        </Button>
+                      </InputGroup.Button>
+
+                      <InputGroup.Button className="input-group-append">
+                        <Button title="Enable target for automatic scheduling"
+                                disabled={this.state.target_selected == null}
+                                className="btn-outline-secondary"
+                                onClick={() => this.handleTargetEnable(this.state.target_selected[0].id)}>
+                          Enable
                         </Button>
                       </InputGroup.Button>
 

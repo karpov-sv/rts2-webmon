@@ -144,3 +144,43 @@ function fromSexa(value) {
 
     return result*sign;
 }
+
+class EditableValue extends React.Component {
+    constructor(props, context) {
+        super(props, context);
+        this.state = {edit: false, newvalue: null};
+    }
+
+    handleChange(event) {
+        this.setState({newvalue: event.target.value});
+    }
+
+    handleKeyDown(event) {
+        if(event.key == 'Escape'){
+            this.setState({edit: false});
+            event.preventDefault();
+        }
+    }
+
+    handleKeyPress(event) {
+        if(event.key == 'Enter'){
+            this.setState({edit: false});
+            if(this.props.onChange)
+                this.props.onChange(this.state.newvalue);
+            event.preventDefault();
+        }
+    }
+
+    render() {
+        if (this.state.edit){
+            return <input defaultValue={this.props.evalue ? this.props.evalue : this.props.value} autoFocus
+                           style={{border: '1px', padding: 0, width: '100%'}}
+                           onChange={(evt) => this.handleChange(evt)}
+                           onKeyPress={(evt) => this.handleKeyPress(evt)}
+                           onKeyDown={(evt) => this.handleKeyDown(evt)}
+                           onBlur={() => this.setState({edit: false})}/>;
+        } else
+            return <span onClick={() => this.setState({edit: true})}>{this.props.value}</span>;
+
+    }
+}
