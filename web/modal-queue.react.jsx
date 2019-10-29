@@ -2,7 +2,7 @@
 class QueueModal extends React.Component {
     constructor(props, context) {
         super(props, context);
-        this.state = {show: false, targets: [], htargets: [], selectable: [], error: null, target_selected: null, message: null, queue: null, inprogress: false, vars: null, time1: null, time2: null, autoOpen: false, showNew: false};
+        this.state = {show: false, targets: [], htargets: [], selectable: [], error: null, target_selected: null, scripts: null, message: null, queue: null, inprogress: false, vars: null, time1: null, time2: null, autoOpen: false, showNew: false};
     }
 
     requestTargets() {
@@ -93,6 +93,35 @@ class QueueModal extends React.Component {
         });
     }
 
+    requestScripts(id) {
+        if(!this.props.auth)
+            return;
+
+        this.setState({inprogress: true});
+
+        $.ajax({
+            url: this.props.root + this.props.client.name + "/api/tbyid",
+            dataType : "json",
+            timeout : 10000,
+            context: this,
+            data: {id: id, e: 1},
+
+            success: function(json){
+                var scripts = {};
+                var d = json.d[0][6];
+
+                for (var i in json.d[0][6])
+                    scripts[Object.keys(d[i])[0]] = d[i][Object.keys(d[i])[0]];
+
+                this.setState({scripts: scripts});
+            },
+
+            error: function(){
+                this.message("API request error while loading target info", "text-error");
+            }
+        });
+    }
+
     sendCommandEx(cmd, data, onSuccess) {
         $.ajax({
             url: this.props.root + this.props.client.name + "/api/" + cmd,
@@ -165,7 +194,7 @@ class QueueModal extends React.Component {
     }
 
     handleShow() {
-        this.setState({show: true, message: null, target_selected: null, autoOpen: false});
+        this.setState({show: true, message: null, target_selected: null, scripts: null, autoOpen: false});
 
         if (this.state.targets.length == 0)
             this.requestTargets();
@@ -385,7 +414,7 @@ class QueueModal extends React.Component {
                 </Modal.Body>
 
                 <Modal.Footer>
-                  <FormGroup>
+                  <FormGroup style={{marginBottom: "5px"}}>
                     <InputGroup>
                       <InputGroup.Addon className="input-group-prepend">
                         <span className="input-group-text">Target:</span>
@@ -402,10 +431,13 @@ class QueueModal extends React.Component {
                                  onChange={(selected) => {
                                      // Handle selections...
                                      this.setState({target_selected: selected});
-                                     if (selected && selected[0])
+                                     if (selected && selected[0]) {
                                          this.showInfo(selected[0].id);
-                                     else
+                                         this.requestScripts(selected[0].id);
+                                     } else {
                                          this.message(null);
+                                         this.setState({scripts: null});
+                                     }
                                  }}
                                  selected={this.state.target_selected}
                                  options={tlist}
@@ -415,7 +447,7 @@ class QueueModal extends React.Component {
                         <DropdownButton id="queue-list"  title="Select queue for targets"
                                         componentClass={InputGroup.Button}
                                         title={this.state.queue ? this.state.queue : "Queue"}
-                                        onSelect={(selected) => {console.log(selected); this.setState({queue: selected});}}>
+                                        onSelect={(selected) => {this.setState({queue: selected});}}>
                           {queue_names.map((d,i) => {return <MenuItem eventKey={d} key={i} active={d == this.state.queue}>{d}</MenuItem>;})}
                         </DropdownButton>
                       </InputGroup.Button>
@@ -449,7 +481,7 @@ class QueueModal extends React.Component {
                     </InputGroup>
                   </FormGroup>
 
-                  <FormGroup>
+                  <FormGroup style={{marginBottom: "5px"}}>
                     <Row  style={{padding: 0, paddingLeft: "15px", paddingRight: "15px"}}>
 
                       <Col md={6}  style={{padding: 0}}>
@@ -485,8 +517,20 @@ class QueueModal extends React.Component {
                     </Row>
                   </FormGroup>
 
+                  {this.state.scripts &&
+                   <ScriptsEdit
+                     command={(cmd,data) => this.sendCommandEx(cmd,data,()=>this.message('Script updated', 'text-success'))}
+                     message={(m,s) => this.message(m,s)}
+                     scripts={this.state.scripts} target={this.state.target_selected[0].id}
+                   />
+                  }
+
                   {this.state.showNew &&
-                   <NewTarget command={(cmd,data) => this.sendCommandEx(cmd,data,()=>this.requestTargets())} onClose={() => this.setState({showNew: false})}/>
+                   <NewTarget
+                     command={(cmd,data) => this.sendCommandEx(cmd,data,()=>this.requestTargets())}
+                     message={(m,s) => this.message(m,s)}
+                     onClose={() => this.setState({showNew: false})}
+                     targets={this.state.targets}/>
                   }
 
                   {this.state.message ? this.state.message : ""}
@@ -516,8 +560,23 @@ class NewTarget extends React.Component {
     }
 
     handleChange(evt, id) {
-        if (id == 'id')
+        if (id == 'id') {
             this.setState({id: evt.target.value});
+
+            var exists = false;
+
+            for (var i = 0; i < this.props.targets.length; i++)
+                if (this.props.targets[i][0] == evt.target.value) {
+                    exists = true;
+                    break;
+                }
+
+            if (exists)
+                this.props.message('Target ' + evt.target.value + ' already exists', 'text-danger');
+            else
+                this.props.message(null);
+
+        }
         if (id == 'name')
             this.setState({name: evt.target.value});
         if (id == 'coords')
@@ -552,6 +611,50 @@ class NewTarget extends React.Component {
                      </InputGroup.Button>
                    </InputGroup>
                  </Form>
+               </>;
+    }
+}
+
+class ScriptsEdit extends React.Component {
+    constructor(props, context) {
+        super(props, context);
+        this.state = {camera: null, script: null};
+    }
+
+    handleChange(evt) {
+        this.setState({script: evt.target.value});
+    }
+
+    handleUpdate() {
+        this.props.command('change_script', {c: this.state.camera, s: this.state.script, id: this.props.target});
+    }
+
+    render() {
+        var scripts = this.props.scripts;
+
+        return <>
+                 <FormGroup style={{marginBottom: "5px"}}>
+                   <InputGroup>
+                      <InputGroup.Button className="input-group-append">
+                        <DropdownButton id="camera-list"  title="Select camera"
+                                        componentClass={InputGroup.Button}
+                                        title={this.state.camera ? this.state.camera : "Camera"}
+                                        onSelect={(selected) => {this.setState({camera: selected, script: scripts[selected][0]});}}>
+                          {Object.keys(scripts).map((d,i) => {return <MenuItem eventKey={d} key={i} active={d == this.state.camera}>{d}</MenuItem>;})}
+                        </DropdownButton>
+                      </InputGroup.Button>
+                     <FormControl placeholder='Script' value={this.state.script ? this.state.script : ''}
+                                  onChange={(evt) => this.handleChange(evt)}/>
+                     <InputGroup.Button className="input-group-append">
+                       <Button title="Update script for selected camera"
+                               className="btn-outline-secondary"
+                               disabled={!this.state.camera}
+                               onClick={() => this.handleUpdate()}>
+                         Update
+                       </Button>
+                     </InputGroup.Button>
+                   </InputGroup>
+                 </FormGroup>
                </>;
     }
 }
