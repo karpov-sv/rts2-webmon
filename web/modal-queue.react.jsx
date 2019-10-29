@@ -519,7 +519,7 @@ class QueueModal extends React.Component {
 
                   {this.state.scripts &&
                    <ScriptsEdit
-                     command={(cmd,data) => this.sendCommandEx(cmd,data,()=>this.message('Script updated', 'text-success'))}
+                     command={(cmd,data) => this.sendCommandEx(cmd,data,()=>this.requestScripts(this.state.target_selected[0].id))}
                      message={(m,s) => this.message(m,s)}
                      scripts={this.state.scripts} target={this.state.target_selected[0].id}
                    />
