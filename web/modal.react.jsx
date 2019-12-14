@@ -101,7 +101,7 @@ class LogModal extends React.Component {
     handleShow() {
         this.setState({show: true});
         this.should_scroll = true;
-        this.request_state();
+        this.requestState();
     }
 
     render() {
@@ -521,7 +521,7 @@ class ObsModal extends React.Component {
                               }
                             </span>
 
-                            <span style={{minWidth: "8em", display: "inline-block"}}>
+                            <span style={{minWidth: "8em", display: "inline-block", marginRight: "0.5em"}}>
                               { !reuse ? obs[7] : '' }
                             </span>
 

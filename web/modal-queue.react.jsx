@@ -296,10 +296,10 @@ class QueueModal extends React.Component {
                 if (this.state.queue == null)
                     this.state.queue = queue;
 
+                queue_names.push(queue);
+
                 if (!vars[queue+'_ids'].length)
                     continue;
-
-                queue_names.push(queue);
 
                 for (var ti = 0; ti < vars[queue+'_ids'].length; ti++){
                     var item = <>

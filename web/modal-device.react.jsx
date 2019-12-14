@@ -469,6 +469,10 @@ class DeviceVariable extends React.Component {
                 // Single string
                 value = <i>{raw}</i>;
 
+            else if (basetype == 0x02 && dtype == 0x00070000)
+                // HEX value
+                value = "0x" + raw.toString(16);
+
             else if ((basetype == 0x04 || basetype == 0x05) && (dtype == 0x00040000 || dtype == 0x000c0000))
                 // Float + deg dist
                 value = toSexa(raw, 'deg', false, ' ');

@@ -9,7 +9,7 @@ Label.defaultProps = {style: {margin: "0.2em"}};
 class Link extends React.Component {
     render() {
         return (
-            <a href={this.props.url} title={this.props.title} style={{padding: "0.2em"}}>
+            <a href={this.props.url} title={this.props.title} style={{padding: "0.2em"}} target="_blank">
               <span className="glyphicon glyphicon-link"></span>
               {this.props.name}
             </a>
