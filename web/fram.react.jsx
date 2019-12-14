@@ -103,8 +103,10 @@ class FramClient extends React.Component {
                     statestring = statestring.replace("BLOCK TELESCOPE MOVEMENT", "BLOCK MOVE");
                     statestring = statestring.replace("| not ending", "");
 
-
-                    dev_name = <DeviceModal title={name + "   " + status[name].statestring} activator={name} variables={vars}/>;
+                    if (this.props.auth)
+                        dev_name = <DeviceModalExt name={name} client={client} activator={name} />;
+                    else
+                        dev_name = <DeviceModal title={name + "   " + status[name].statestring} activator={name} variables={vars}/>;
 
                     dev_body = statestring;
 
@@ -157,7 +159,7 @@ class FramClient extends React.Component {
 
                         // Latest image previewer
                         if (this.props.auth && vars['last_preview_image'])
-                            dev_body = <>{dev_body}<span className="pull-right"><CameraModal name={name} client={client} activator={<span className="glyphicon glyphicon-picture" title="Latest image"/>} variables={vars}/></span></>;
+                            dev_body = <>{dev_body}<span className="pull-right"><CameraModal name={name} client={client} activator={<span className="glyphicon glyphicon-picture icon" title="Latest image"/>} variables={vars}/></span></>;
                     }
 
                     // dome
@@ -186,7 +188,7 @@ class FramClient extends React.Component {
                             dev_sub.push(<span className="label label-danger" key="12v_off">
                                            12V is off
                                          </span>);
-                        if ((vars['48V'] == 0 || vars['48VDC'] == 0) && (client.name == 'cta-s1'))
+                        if ((vars['48V'] == 0 || vars['48VDC'] == 0) && (client.name == 'cta-s0' || client.name == 'cta-s1'))
                             dev_sub.push(<span className="label label-danger" key="48v_off">
                                            48V is off
                                          </span>);
@@ -215,7 +217,7 @@ class FramClient extends React.Component {
                             elem = (<span className="text-muted" key={'weather1'}>
                                       wind { (vars['windspeed']/3.6).toFixed(1) } m/s.
                                     </span>);
-                        else if (client.name == 'cta-s1')
+                        else if (client.name == 'cta-s0' || client.name == 'cta-s1')
                             elem = (<span className="text-muted" key={'weather1'}>
                                       wind { vars['WIND_AVG'].toFixed(1) } m/s.
                                     </span>);
@@ -248,6 +250,16 @@ class FramClient extends React.Component {
                                        next open: <UnixTime time={vars['next_open']}/>
                                      </span>);
 
+                    // grbd
+                    if (type == 9) {
+                        if (vars['last_packet'] && vars['last_packet'] < now() - 1800)
+                            dev_sub.push(<span className="label label-warning">Last packet at <UnixTime time={vars['last_packet']}/></span>);
+                        if (vars['last_target_time'] && vars['last_target_time'] > now() - 0.5*3600)
+                            dev_sub.push(<span className="text-warning">Last target: {vars['last_target']} / <a href={this.props.root + client.name + '/targets/'+ vars['last_target_id']} target="_blank">{vars['last_target_id']}</a> at <UnixTime time={vars['last_target_time']}/></span>);
+                        else if (vars['last_target_time'] && vars['last_target_time'] > now() - 6*3600)
+                            dev_sub.push(<span className="text-default">Last target: {vars['last_target']} / <a href={this.props.root + client.name + '/targets/'+ vars['last_target_id']} target="_blank">{vars['last_target_id']}</a> at <UnixTime time={vars['last_target_time']}/></span>);
+                    }
+
                     // executor
                     if (type == 20) {
                         if (vars['ignore_day'])
@@ -267,19 +279,21 @@ class FramClient extends React.Component {
                     if (type == 22) {
                         if (vars['ignore_day'])
                             dev_sub.push(<span className="label label-warning">Ignoring day</span>);
-                        for (var qi = 0; qi < vars['queue_names'].length; qi++){
-                            var queue = vars['queue_names'][qi];
-                            var targets = [];
 
-                            for (var ti = 0; ti < vars[queue+'_ids'].length; ti++){
-                                var title = unixtime(vars[queue+'_start'][ti]) + " - " + unixtime(vars[queue+'_end'][ti]);
+                        if (vars['queue_names'])
+                            for (var qi = 0; qi < vars['queue_names'].length; qi++){
+                                var queue = vars['queue_names'][qi];
+                                var targets = [];
 
-                                targets.push(<span className="label label-info" key={ti} title={title} style={{margin: "0.2em"}}>{vars[queue+'_ids'][ti] + ' / ' + vars[queue+'_names'][ti]}</span>);
+                                for (var ti = 0; ti < vars[queue+'_ids'].length; ti++){
+                                    var title = unixtime(vars[queue+'_start'][ti]) + " - " + unixtime(vars[queue+'_end'][ti]);
+
+                                    targets.push(<span className="label label-info" key={ti} title={title} style={{margin: "0.2em"}}>{vars[queue+'_ids'][ti] + ' / ' + vars[queue+'_names'][ti]}</span>);
+                                }
+
+                                if (targets.length)
+                                    dev_sub.push(<span>{queue}: {targets}</span>);
                             }
-
-                            if (targets.length)
-                                dev_sub.push(<span>{queue}: {targets}</span>);
-                        }
                     }
 
                     // AUGER
@@ -320,7 +334,7 @@ class FramClient extends React.Component {
             commands['Mount'] = {'Park': 'T0.park', 'Stop': 'T0.stop', 'Toggle': 'DOME.toggle_mount'};
         else if (client.name == 'auger')
             commands['Mount'] = {'Park': 'GM2000.park', 'Stop': 'GM2000.stop', 'Toggle': 'DOME.toggle_mount'};
-        else if (client.name == 'cta-s1')
+        else if (client.name == 'cta-s0' || client.name == 'cta-s1')
             commands['Mount'] = {'Park': 'T0.park', 'Stop': 'T0.stop', 'On': 'DOME.48VDC=1', 'Off': 'DOME.48VDC=0'};
 
         commands['Dome'] = {'Open': 'DOME.open', 'Close': 'DOME.close', 'Reset Emergency': 'DOME.reset_emergency', 'Reset next': 'DOME.reset_next'};
@@ -329,7 +343,7 @@ class FramClient extends React.Component {
             commands['12V'] = {'On': "DOME.12VDC=1", 'Off': "DOME.12VDC=0"};
         } else if (client.name == 'auger') {
             commands['12V'] = {'On': "DOME.12V=1", 'Off': "DOME.12V=0"};
-        } else if (client.name == 'cta-s1') {
+        } else if (client.name == 'cta-s0' || client.name == 'cta-s1') {
             commands['12V'] = {'On': "DOME.12VDC=1", 'Off': "DOME.12VDC=0"};
         }
 
@@ -343,7 +357,7 @@ class FramClient extends React.Component {
             commands['WF8'] = {'Cooling ON': 'WF8.CCD_SET=-20', 'Cooling OFF': 'WF8.CCD_SET=50'};
         }
 
-        if (client.name == 'cta-s1') {
+        if (client.name == 'cta-s0' || client.name == 'cta-s1') {
             commands['WF0'] = {'Cooling ON': 'WF0.CCD_SET=-20', 'Cooling OFF': 'WF0.CCD_SET=50'};
             commands['FWF'] = {'-100': 'FWF.FOC_TAR-=100', '-10': 'FWF.FOC_TAR-=10', '+10': 'FWF.FOC_TAR+=10', '+100': 'FWF.FOC_TAR+=100'};
         }
@@ -372,7 +386,11 @@ class FramClient extends React.Component {
 
                        <span style={{marginLeft:"0.5em"}}/>
 
-                       <span className="glyphicon glyphicon-picture" onClick={()=>window.open(this.props.root + client.name + '/preview/', '_blank')} title="Image Previews"/>
+                       <QueueModal name='SEL' client={client} />
+
+                       <span style={{marginLeft:"0.5em"}}/>
+
+                       <span className="glyphicon glyphicon-picture icon" onClick={()=>window.open(this.props.root + client.name + '/preview/', '_blank')} title="Image Previews"/>
 
                        <span style={{marginLeft:"0.5em"}}/>
 
