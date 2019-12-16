@@ -184,3 +184,31 @@ class EditableValue extends React.Component {
 
     }
 }
+
+function setCookie(name, value, days=-1) {
+    var d = new Date();
+    d.setTime(d.getTime() + (days*24*60*1000));
+    var expires = "";
+
+    if (days >= 0)
+        expires = "expires="+ d.toUTCString();
+    document.cookie = name + "=" + escape(value) + "; " + expires;
+}
+
+function deleteCookie(name) {
+    setCookie(name, 'value', 0);
+}
+
+function getCookie(name, def) {
+    var cookies = document.cookie.split(";");
+
+    for (var i in cookies) {
+        var s = cookies[i].split('=');
+        s[0] = s[0].replace(/^\s+|\s+$/g, "");
+
+        if (s[0] == name && s.length == 2) {
+            return unescape(s[1]);
+        }
+    }
+    return def;
+}
