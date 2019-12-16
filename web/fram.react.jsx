@@ -367,64 +367,68 @@ class FramClient extends React.Component {
         commands['IMGP'] = {'Disable corrections': 'IMGP.apply_corrections=0', 'Enable corrections': 'IMGP.apply_corrections=1'};
 
         // Construct the component
-        return (
-            // <Col md={12} style={{padding: '1px'}}>
-            // <div>
-              <Panel expanded={client.connected}>
-                <Panel.Heading>
-                  <Panel.Title componentClass='h3'>
-                    {client.description}
-                    <span style={{marginLeft:"0.5em"}}/>
-                    {head_status}
-                    {client.connected && this.props.auth &&
-                     <span className="pull-right">
-                       <LogModal client={client} />
+        var panel =
+            <Panel expanded={client.connected}>
+              <Panel.Heading>
+                <Panel.Title componentClass='h3'>
+                  {client.description}
+                  <span style={{marginLeft:"0.5em"}}/>
+                  {head_status}
+                  {client.connected && this.props.auth &&
+                   <span className="pull-right">
+                     <LogModal client={client} />
 
-                       <span style={{marginLeft:"0.5em"}}/>
+                     <span style={{marginLeft:"0.5em"}}/>
 
-                       <ObsModal client={client} />
+                     <ObsModal client={client} />
 
-                       <span style={{marginLeft:"0.5em"}}/>
+                     <span style={{marginLeft:"0.5em"}}/>
 
-                       <QueueModal name='SEL' client={client} />
+                     <QueueModal name='SEL' client={client} />
 
-                       <span style={{marginLeft:"0.5em"}}/>
+                     <span style={{marginLeft:"0.5em"}}/>
 
-                       <span className="glyphicon glyphicon-picture icon" onClick={()=>window.open(this.props.root + client.name + '/preview/', '_blank')} title="Image Previews"/>
+                     <span className="glyphicon glyphicon-picture icon" onClick={()=>window.open(this.props.root + client.name + '/preview/', '_blank')} title="Image Previews"/>
 
-                       <span style={{marginLeft:"0.5em"}}/>
+                     <span style={{marginLeft:"0.5em"}}/>
 
-                       <CmdModal client={client} commands={commands}/>
-                     </span>
-                    }
-                  </Panel.Title>
-                </Panel.Heading>
-                <Panel.Body collapsible style={{padding: "5px", margin: "1px"}}>
-                  <div className={body_class}>
-                    {night_info}
-                    <Row>
-                      <Col md={8}>
-                        <ul className="list-unstyled">
-                          {devices.map((d,i) => {return <li key={i}>{d}</li>;})}
-                        </ul>
-                      </Col>
-                      <Col md={4}>
-                        {client.webcam &&
-                         <ImageRefresh src={client.webcam}/>
-                        }
-                        {client.links &&
-                         <div className="text-center">
+                     <CmdModal client={client} commands={commands}/>
+                   </span>
+                  }
+                </Panel.Title>
+              </Panel.Heading>
+              <Panel.Body collapsible style={{padding: "5px", margin: "1px"}}>
+                <div className={body_class}>
+                  {night_info}
+                  <Row>
+                    <Col md={8}>
+                      <ul className="list-unstyled">
+                        {devices.map((d,i) => {return <li key={i}>{d}</li>;})}
+                      </ul>
+                    </Col>
+                    <Col md={4}>
+                      {client.webcam &&
+                       <ImageRefresh src={client.webcam}/>
+                      }
+                      {client.links &&
+                       <div className="text-center">
                          {Object.keys(client.links).map((l,i) => {return <Link key={i} name={client.links[l].name} url={client.links[l].url}/>})}
-                         </div>
-                        }
-                      </Col>
-                    </Row>
-                  </div>
-                </Panel.Body>
-              </Panel>
-            // </div>
-            // </Col>
-        );
+                       </div>
+                      }
+                    </Col>
+                  </Row>
+                </div>
+              </Panel.Body>
+            </Panel>;
+
+        return <>
+                 {this.props.view == 'full'
+                  ? panel
+                  : <Col md={6} style={{padding: '1px'}}>
+                      {panel}
+                    </Col>
+                 }
+               </>;
     }
 }
 
