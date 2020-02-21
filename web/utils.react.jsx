@@ -54,12 +54,31 @@ UnixTime.defaultProps = {refresh:"500", age:true};
 class ImageRefresh extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {src: props.src, rsrc: props.src};
+        this.state = {src: props.src, rsrc: props.src, show: false};
         this.interval = null;
     }
 
     render() {
-        return <img className="img img-responsive center-block" src={this.state.rsrc} onLoad={this.run.bind(this)} onError={this.run.bind(this)}/>;
+        if (!this.props.popup)
+            return <img className="img img-responsive center-block" src={this.state.rsrc} onLoad={() => this.run()} onError={() => this.run()}/>;
+        else
+            return (
+                <>
+                  {/* Activator */}
+                  <img className="img img-responsive center-block" src={this.state.rsrc} onLoad={() => this.run()} onError={() => this.run()} onClick={() => this.setState({show: true })} />
+
+                    {/* Modal window */}
+                    <Modal bsSize="lg" show={this.state.show} onHide={() => this.setState({show: false})}>
+                      <Modal.Header closeButton>
+                        <Modal.Title>{this.props.title}</Modal.Title>
+                      </Modal.Header>
+                      <Modal.Body>
+                        <img className="img img-responsive center-block" src={this.state.rsrc} onLoad={() => this.run()} onError={() => this.run()} />
+
+                      </Modal.Body>
+                    </Modal>
+
+                </>);
     }
 
     updateSrc() {

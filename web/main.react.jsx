@@ -11,6 +11,7 @@ class Monitor extends React.Component {
         var clients_list = Object.keys(this.state.clients).sort((v1,v2) => {return this.state.clients[v1].order - this.state.clients[v2].order;});
 
         var contents = [];
+        var contents2 = [];
 
         for (var i = 0; i < clients_list.length; i++){
             var name = this.state.clients[clients_list[i]].name;
@@ -19,18 +20,20 @@ class Monitor extends React.Component {
 
             if (Client) {
                 contents.push(<Client status={this.state.status[name]} client={this.state.clients[name]} key={name}/>);
+
+                if(this.props.view == 'compact' && contents.length == 2) {
+                    contents2.push(<Row style={{'margin':0, 'padding':0}}>{contents}</Row>);
+                    contents = [];
+                }
             }
         }
 
+        if (contents2.length)
+            contents = contents2;
+
         return (
             <div className={this.state.connected ? null : "disabled-controls"}>
-              {this.props.view == 'full'
-               ? contents
-               :
-              <Row>
-                {contents}
-              </Row>
-              }
+              {contents}
               <div style={{marginBottom: "0.5em"}}>
                 <span className="pull-left">
                   <ViewSelector view={this.props.view} onChange={(_)=>this.props.dispatch(globalSetView(_))}/>

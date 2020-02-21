@@ -392,6 +392,9 @@ class ObsModal extends React.Component {
         this.modal_body = React.createRef();
         this.should_scroll = true;
         this.should_update = false;
+
+        this.night = null;
+        this.night_input = null;
     }
 
     componentDidMount() {
@@ -434,11 +437,17 @@ class ObsModal extends React.Component {
         if(!this.props.auth)
             return;
 
+        var data = {};
+
+        if (this.state.night)
+            data['night'] = this.state.night;
+
         $.ajax({
             url: this.props.root + this.props.client.name + "/api/obytime",
             dataType : "json",
             timeout : 10000,
             context: this,
+            data: data,
 
             success: function(json){
                 this.setState({error: null, observations: json.d, h: json.h, messages: json.messages.d});
@@ -457,14 +466,22 @@ class ObsModal extends React.Component {
     }
 
     handleShow() {
-        this.setState({show: true});
+        this.setState({show: true, night: null, night_input: null}, () => this.requestState());
         this.should_scroll = true;
-        this.requestState();
     }
 
     handleHide() {
         this.setState({show: false});
         clearTimeout(this.timer);
+    }
+
+    handleChange(event) {
+        this.setState({night_input: event.target.value});
+    }
+
+    handleSubmit(event) {
+        this.setState({night: this.state.night_input, observations: [], messages: []}, () => this.requestState());
+        event.preventDefault();
     }
 
     render() {
@@ -509,7 +526,13 @@ class ObsModal extends React.Component {
                     reuse = false;
                 }
 
-                list.push(<li key={i} className="list-group-item" style={style}>
+                var aclass = "";
+                if (obs[4] == 0 && obs[6] != 1 && obs[6] != 2 && obs[6] != 21)
+                    aclass = "list-group-item-warning";
+                if (obs[4] == 0 && obs[6] == 12)
+                    aclass = "list-group-item-danger";
+
+                list.push(<li key={i} className={"list-group-item " + aclass} style={style}>
                             <span style={{minWidth: "5em", display: "inline-block"}}>
                               <a href={this.state.h[0].prefix + obs[0]} target="_blank">{ obs[0] }</a>
                             </span>
@@ -565,7 +588,10 @@ class ObsModal extends React.Component {
               {/* Modal window */}
               <Modal bsSize="lg" show={this.state.show} onHide={() => this.handleHide()} onEntered={() => this.scrollToBottom()}>
                 <Modal.Header closeButton>
-                  <Modal.Title>{this.props.title ? this.props.title : "List of Observations : " + this.props.client.description}</Modal.Title>
+                  <Modal.Title>
+                    {this.props.title ? this.props.title : "List of Observations : " + this.props.client.description}
+                    {this.state.night ? ' : ' + this.state.night : ''}
+                  </Modal.Title>
                 </Modal.Header>
                 <div ref={this.modal_body}>
                   <Modal.Body style={{'maxHeight': 'calc(100vh - 210px)', 'overflowY': 'auto', 'overflowX': 'auto', 'padding': 0, 'whiteSpace': 'nowrap'}}>
@@ -578,6 +604,20 @@ class ObsModal extends React.Component {
                   </Modal.Body>
                 </div>
                 <Modal.Footer>
+                  <span className="pull-left">
+
+                    <Form inline onSubmit={evt => this.handleSubmit(evt)}>
+
+                      <FormControl
+                        type="text"
+                        value={this.state.night_input}
+                        onChange={(evt) => this.handleChange(evt)}
+                        placeholder="YYYY-MM-DD"/>
+                      {' '}
+                      <Button type="submit">Show Night</Button>
+                    </Form>
+                  </span>
+
                   <Button bsStyle="default" onClick={() => this.handleHide()}>Close</Button>
                 </Modal.Footer>
               </Modal>

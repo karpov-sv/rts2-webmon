@@ -150,14 +150,18 @@ class WebMonitor(Resource):
             # self.object['clients'][name]['status'] = status
             self.object['status'][name] = status
             self.object['clients'][name]['connected'] = True
+            self.object['clients'][name]['last_status'] = (datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1)).total_seconds()
 
             # TODO: Store to database before modifying the status
 
             for _ in self.object['clients'][name]['devices']:
                 if not self.object['status'][name].has_key(_):
                     self.object['status'][name][_] = {'connected':False}
+                    self.object['status'][name][_]['last_status'] = self.object['clients'][name]['devices_last_status'][_]
                 else:
                     self.object['status'][name][_]['connected'] = True
+                    self.object['clients'][name]['devices_last_status'][_] = (datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1)).total_seconds()
+                    self.object['status'][name][_]['last_status'] = self.object['clients'][name]['devices_last_status'][_]
 
             for _ in self.object['status'][name]:
                 if type(self.object['status'][name][_]) == dict:
@@ -435,6 +439,8 @@ if __name__ == '__main__':
         c['password'] = '*'
 
         c['connected'] = False
+        c['last_status'] = 0
+        c['devices_last_status'] = {_:0 for _ in c['devices']}
 
     obj['sessions'] = {}
 

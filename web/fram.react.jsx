@@ -65,20 +65,40 @@ class FramClient extends React.Component {
         } else
             head_status.push(<Label className="danger" key="connstatus">Disconnected</Label>);
 
+        if (!client.connected || client.last_status < now() - 60)
+            head_status.push(<Label className="danger" key="connlast">Last update <UnixTime time={client.last_status}/></Label>);
+
         if (status) {
             // Current night and Moon info
-            if (status['centrald'] && status['centrald'].connected && status['centrald'].d && status['centrald'].d.lunar_phase)
-                night_info = (
-                    <div className="small text-muted" style={{padding: "5px"}}>
-                      Night start <span className="text-info"><UnixTime time={status['centrald'].d.night_beginning}/></span> end <span className="text-info"><UnixTime time={status['centrald'].d.night_ending}/></span>.
+            if (status['centrald'] && status['centrald'].connected && status['centrald'].d && status['centrald'].d.lunar_phase) {
+                if (this.props.view == 'compact') {
+                    var mpopup = "Rise " + unixtime(status['centrald'].d.moon_rise) + "\nSet " + unixtime(status['centrald'].d.moon_set) + "\nPhase " + status['centrald'].d.lunar_phase.toFixed(1) + "\nLimb " + status['centrald'].d.lunar_limb.toFixed(1);
 
-                      Sun alt <span className="text-info">{status['centrald'].d.sun_alt.toFixed(1)}</span> deg.
+                    night_info = (
+                        <div className="small text-muted" style={{padding: "5px"}}>
+                          Night start <span className="text-info"><UnixTime time={status['centrald'].d.night_beginning}/></span> end <span className="text-info"><UnixTime time={status['centrald'].d.night_ending}/></span>.
 
-                      Moon rise <span className="text-info"><UnixTime time={status['centrald'].d.moon_rise}/></span> set <span className="text-info"><UnixTime time={status['centrald'].d.moon_set}/></span>,
+                          Sun alt <span className="text-info">{status['centrald'].d.sun_alt.toFixed(1)}</span> deg.
+                          &nbsp;
+                          <span title={mpopup}>
+                            Moon alt <span className="text-info">{status['centrald'].d.moon_alt.toFixed(1)}</span> deg.
+                          </span>
+                        </div>
+                    );
+                } else {
+                    night_info = (
+                        <div className="small text-muted" style={{padding: "5px"}}>
+                          Night start <span className="text-info"><UnixTime time={status['centrald'].d.night_beginning}/></span> end <span className="text-info"><UnixTime time={status['centrald'].d.night_ending}/></span>.
 
-                      phase <span className="text-info">{status['centrald'].d.lunar_phase.toFixed(1)}</span> deg, limb <span className="text-info">{status['centrald'].d.lunar_limb.toFixed(1)}</span> deg, alt <span className="text-info">{status['centrald'].d.moon_alt.toFixed(1)}</span> deg.
-                    </div>
-                );
+                          Sun alt <span className="text-info">{status['centrald'].d.sun_alt.toFixed(1)}</span> deg.
+
+                          Moon rise <span className="text-info"><UnixTime time={status['centrald'].d.moon_rise}/></span> set <span className="text-info"><UnixTime time={status['centrald'].d.moon_set}/></span>,
+
+                        phase <span className="text-info">{status['centrald'].d.lunar_phase.toFixed(1)}</span> deg, limb <span className="text-info">{status['centrald'].d.lunar_limb.toFixed(1)}</span> deg, alt <span className="text-info">{status['centrald'].d.moon_alt.toFixed(1)}</span> deg.
+                            </div>
+                    );
+                }
+            }
 
             // Devices
             for (var i = 0; i < client.devices.length; i++) {
@@ -97,11 +117,23 @@ class FramClient extends React.Component {
 
                     statestring = statestring.replace("| SHUTTER_CLEARED", "");
                     statestring = statestring.replace("| IMAGE_READY", "");
-                    // statestring = statestring.replace("BLOCK_OPEN", "!OPEN");
-                    // statestring = statestring.replace("BLOCK_CLOSE", "!CLOSE");
-                    // statestring = statestring.replace("BLOCK EXPOSURE", "!EXPOSE");
                     statestring = statestring.replace("BLOCK TELESCOPE MOVEMENT", "BLOCK MOVE");
                     statestring = statestring.replace("| not ending", "");
+
+                    if (this.props.view == 'compact') {
+                        statestring = statestring.replace("BLOCK_OPEN", "");
+                        statestring = statestring.replace("BLOCK_CLOSE", "");
+                        statestring = statestring.replace("BLOCK EXPOSURE", "");
+                        statestring = statestring.replace("# BLOCK EXPOSING", "");
+                        statestring = statestring.replace("# BLOCK READOUT", "");
+                        statestring = statestring.replace("BLOCK MOVE", "");
+
+                        statestring = statestring.replace("| idle", "");
+
+                        statestring = statestring.replace(/\s*\|\s*$/, "")
+                        statestring = statestring.replace(/\s*#\s*$/, "")
+                        statestring = statestring.replace(/\s*\|\s*$/, "")
+                    }
 
                     if (this.props.auth)
                         dev_name = <DeviceModalExt name={name} client={client} activator={name} />;
@@ -147,15 +179,24 @@ class FramClient extends React.Component {
                                      </span>);
 
                     // camera
-                    if (type == 3 && vars['SCRIPT']) {
-                        var s1 = vars['SCRIPT'].substring(0, vars['scriptPosition']);
-                        var s2 = vars['SCRIPT'].substring(vars['scriptPosition'], vars['scriptPosition']+vars['scriptLen']);
-                        var s3 = vars['SCRIPT'].substring(vars['scriptPosition']+vars['scriptLen']);
+                    if (type == 3) {
+                        // Current script
+                        if (vars['SCRIPT']) {
+                            var s1 = vars['SCRIPT'].substring(0, vars['scriptPosition']);
+                            var s2 = vars['SCRIPT'].substring(vars['scriptPosition'], vars['scriptPosition']+vars['scriptLen']);
+                            var s3 = vars['SCRIPT'].substring(vars['scriptPosition']+vars['scriptLen']);
 
-                        if (s2)
-                            dev_sub.push(<span className="text-muted" key="camera_script_1">{s1}<mark>{s2}</mark>{s3}</span>);
-                        else
-                            dev_sub.push(<span className="text-muted" key="camera_script_1">{s1}{s2}{s3}</span>);
+                            if (s2)
+                                dev_sub.push(<span className="text-muted" key="camera_script_1">{s1}<mark>{s2}</mark>{s3}</span>);
+                            else
+                                dev_sub.push(<span className="text-muted" key="camera_script_1">{s1}{s2}{s3}</span>);
+                        }
+
+                        // Camera temperature
+                        if (vars['CCD_SET'] && vars['CCD_TEMP'] && vars['CCD_SET'] < vars['CCD_TEMP']-1)
+                            dev_sub.push(<span className="label label-warning" key="camera_hot">
+                                         Camera not cooled
+                                         </span>);
 
                         // Latest image previewer
                         if (this.props.auth && vars['last_preview_image'])
@@ -199,6 +240,10 @@ class FramClient extends React.Component {
                         if (vars['emergency'])
                             dev_sub.push(<span className="label label-danger" key="emergency">
                                            Emergency
+                                         </span>);
+                        if (vars['timeout_occured'])
+                            dev_sub.push(<span className="label label-danger" key="timeout">
+                                           Timeout
                                          </span>);
                     }
 
@@ -308,6 +353,8 @@ class FramClient extends React.Component {
                         if (vars['battery.charge'] && vars['battery.charge'] != 100)
                             dev_sub.push(<span className="label label-danger">Battery {vars['battery.charge']} % : {vars['ups.status']}</span>);
                     }
+                } else {
+                    dev_body = <span class="text-danger">disconnected since <UnixTime time={status[name].last_status}/></span>;
                 }
 
                 // Construct the piece describing single device
@@ -367,8 +414,11 @@ class FramClient extends React.Component {
         commands['IMGP'] = {'Disable corrections': 'IMGP.apply_corrections=0', 'Enable corrections': 'IMGP.apply_corrections=1'};
 
         // Construct the component
+        var pstyle = {};
+        if (this.props.view == 'compact')
+            pstyle['margin'] = '1px';
         var panel =
-            <Panel expanded={client.connected}>
+            <Panel expanded={client.connected} style={pstyle}>
               <Panel.Heading>
                 <Panel.Title componentClass='h3'>
                   {client.description}
@@ -408,7 +458,7 @@ class FramClient extends React.Component {
                     </Col>
                     <Col md={4}>
                       {client.webcam &&
-                       <ImageRefresh src={client.webcam}/>
+                       <ImageRefresh src={client.webcam} popup={1} title={client.description + ' Webcam'}/>
                       }
                       {client.links &&
                        <div className="text-center">
