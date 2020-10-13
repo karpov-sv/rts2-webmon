@@ -65,7 +65,7 @@ class FramClient extends React.Component {
         } else
             head_status.push(<Label className="danger" key="connstatus">Disconnected</Label>);
 
-        if (!client.connected || client.last_status < now() - 60)
+        if (!client.connected || client.last_status < now() - 240)
             head_status.push(<Label className="danger" key="connlast">Last update <UnixTime time={client.last_status}/></Label>);
 
         if (status) {
@@ -173,10 +173,17 @@ class FramClient extends React.Component {
                                      </span>);
 
                     // mount
-                    if (type == 2 && ((cstate & 0x0f) != 2 && (cstate & 0x0f) != 3 && (cstate & 0x0f) != 4) && (state & 0x07) != 2)
-                        dev_sub.push(<span className="label label-danger" key="mount_not_parked">
-                                       Mount is not parked
-                                     </span>);
+                    if (type == 2) {
+                        if (((cstate & 0x0f) != 2 && (cstate & 0x0f) != 3 && (cstate & 0x0f) != 4) && (state & 0x07) != 2)
+                            dev_sub.push(<span className="label label-danger" key="mount_not_parked">
+                                         Mount is not parked
+                                         </span>);
+
+                        if (vars['Gstat'] == '1')
+                            dev_sub.push(<span className="label label-danger" key="mount_stopped">
+                                         Mount stopped
+                                         </span>);
+                    }
 
                     // camera
                     if (type == 3) {
@@ -245,6 +252,14 @@ class FramClient extends React.Component {
                             dev_sub.push(<span className="label label-danger" key="timeout">
                                            Timeout
                                          </span>);
+                        if (vars['on_battery'])
+                            dev_sub.push(<span className="label label-danger" key="on_battery">
+                                           On Battery
+                                         </span>);
+                        if (vars['battery_low'])
+                            dev_sub.push(<span className="label label-danger" key="battery_low">
+                                           Battery Low
+                                         </span>);
                     }
 
                     // weather
@@ -309,6 +324,8 @@ class FramClient extends React.Component {
                     if (type == 20) {
                         if (vars['ignore_day'])
                             dev_sub.push(<span className="label label-warning">Ignoring day</span>);
+                        if (vars['PI'].indexOf('magic') !== -1)
+                            dev_sub.push(<span className="label label-success">MAGIC follow-up active</span>);
                     }
 
                     // imgproc
@@ -332,12 +349,19 @@ class FramClient extends React.Component {
 
                                 for (var ti = 0; ti < vars[queue+'_ids'].length; ti++){
                                     var title = unixtime(vars[queue+'_start'][ti]) + " - " + unixtime(vars[queue+'_end'][ti]);
+                                    var ttype = 'info';
 
-                                    targets.push(<span className="label label-info" key={ti} title={title} style={{margin: "0.2em"}}>{vars[queue+'_ids'][ti] + ' / ' + vars[queue+'_names'][ti]}</span>);
+                                    if (status['EXEC'] && status['EXEC'].d && status['EXEC'].d['current'] == vars[queue+'_ids'][ti])
+                                        ttype = 'success';
+                                    else if (vars['next_id'] == vars[queue+'_ids'][ti])
+                                        ttype = 'warning';
+
+                                    targets.push(<span className={"label label-"+ttype} key={ti} title={title} style={{margin: "0.0em"}}>{vars[queue+'_ids'][ti] + ' / ' + vars[queue+'_names'][ti]}</span>);
                                 }
 
                                 if (targets.length)
-                                    dev_sub.push(<span>{queue}: {targets}</span>);
+                                    // dev_sub.push(<span>{queue}: {targets}</span>);
+                                    dev_sub.push(<>{queue}: {targets.map((d,i) => {return <>{d} </>})}</>);
                             }
                     }
 
