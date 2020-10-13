@@ -1,10 +1,10 @@
 class Label extends React.Component {
     render() {
-        return (<span className={"label label-" + this.props.className} style={this.props.style} title={this.props.title}>{this.props.children}</span>);
+        return (<><span className={"label label-" + this.props.className} style={this.props.style} title={this.props.title}>{this.props.children}</span> </>);
     }
 }
 
-Label.defaultProps = {style: {margin: "0.2em"}};
+// Label.defaultProps = {style: {margin: "0.2em"}};
 
 class Link extends React.Component {
     render() {

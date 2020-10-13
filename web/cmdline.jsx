@@ -3,7 +3,8 @@ function parseCommand(command, name=null) {
     var cmd;
     var data;
 
-    if(name && name.length && !command.includes('.'))
+    if(name && name.length &&
+       (!command.includes('.') || (command.includes('.') && command.includes('=') && command.indexOf('.') > command.indexOf('='))))
         command = name + '.' + command;
 
     if(m = /^\s*(\w+)\.(\w+)\s*\+\=\s*(\w+)\s*$/.exec(command)) {

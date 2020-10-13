@@ -520,7 +520,11 @@ class ObsModal extends React.Component {
                 }
 
                 // Messages before current observation
-                while (mi < this.state.messages.length && this.state.messages[mi][0] < obs[1]) {
+                var otime = obs[1];
+                if (obs[2] && obs[2] > obs[1])
+                    otime = obs[2];
+
+                while (mi < this.state.messages.length && this.state.messages[mi][0] < otime) {
                     add_msg(mi);
                     mi ++;
                     reuse = false;
