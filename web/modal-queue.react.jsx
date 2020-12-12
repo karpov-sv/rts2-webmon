@@ -267,6 +267,26 @@ class QueueModal extends React.Component {
         this.sendCommandEx('update_target', {id: id, priority: priority});
     }
 
+    handleTargetTimeStart(queue, id, time_end, time) {
+        if (!time)
+            return;
+
+        var unix1 = moment(time, 'YYYY-MM-DD HH:mm:ss ZZ').unix();
+        var unix2 = moment(time_end, 'YYYY-MM-DD HH:mm:ss ZZ').unix();
+
+        this.sendCommand('update_times ' + queue + ' ' + id + ' ' + unix1 + ' ' + unix2);
+    }
+
+    handleTargetTimeEnd(queue, id, time_start, time) {
+        if (!time)
+            return;
+
+        var unix1 = moment(time_start, 'YYYY-MM-DD HH:mm:ss ZZ').unix();
+        var unix2 = moment(time, 'YYYY-MM-DD HH:mm:ss ZZ').unix();
+
+        this.sendCommand('update_times ' + queue + ' ' + id + ' ' + unix1 + ' ' + unix2);
+    }
+
     render() {
         var style = {padding: '0.2em', paddingLeft: '0.5em', paddingRight: '0.5em'};
         var vars = this.state.vars;
@@ -302,14 +322,23 @@ class QueueModal extends React.Component {
                     continue;
 
                 for (var ti = 0; ti < vars[queue+'_ids'].length; ti++){
+                    var time1 = <UnixTime time={vars[queue+'_start'][ti]}/>;
+                    var etime1 = unixtime(vars[queue+'_start'][ti], false);
+                    var time2 = <UnixTime time={vars[queue+'_end'][ti]}/>;
+                    var etime2 = unixtime(vars[queue+'_end'][ti], false);
+
                     var item = <>
-                                 <span style={{minWidth: "10em", display: "inline-block"}}>
-                                   <a href={this.props.root + this.props.client.name + '/targets/' + vars[queue+'_ids'][ti]} target='_blank'>{vars[queue+'_ids'][ti]}</a>
-                                   {' / ' + vars[queue+'_names'][ti]}</span>
-                                 <span style={{minWidth: "1em", display: "inline-block"}}/>
-                                 <UnixTime time={vars[queue+'_start'][ti]}/>
-                                 {'  -  '}
-                                 <UnixTime time={vars[queue+'_end'][ti]}/>
+                                   <span style={{minWidth: "10em", display: "inline-block"}}>
+                                       <a href={this.props.root + this.props.client.name + '/targets/' + vars[queue+'_ids'][ti]} target='_blank'>{vars[queue+'_ids'][ti]}</a>
+                                       {' / ' + vars[queue+'_names'][ti]}
+                                   </span>
+                                   <span style={{minWidth: "1em", display: "inline-block"}}>
+                                       <EditableValue value={time1} evalue={etime1} onChange={this.handleTargetTimeStart.bind(this, queue, ti, etime2)}/>
+                                   </span>
+                                   {'  -  '}
+                                   <span style={{minWidth: "1em", display: "inline-block"}}>
+                                       <EditableValue value={time2} evalue={etime2} onChange={this.handleTargetTimeEnd.bind(this, queue, ti, etime1)}/>
+                                   </span>
                                </>;
 
                     targets.push(item);
