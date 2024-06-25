@@ -200,9 +200,16 @@ class FramClient extends React.Component {
                         }
 
                         // Camera temperature
-                        if (vars['CCD_SET'] && vars['CCD_TEMP'] && vars['CCD_SET'] < vars['CCD_TEMP']-1)
+                        if (//vars['CCD_SET'] && vars['CCD_TEMP'] &&
+                            vars['CCD_SET'] < vars['CCD_TEMP']-1)
                             dev_sub.push(<span className="label label-warning" key="camera_hot">
                                          Camera not cooled
+                                         </span>);
+
+                        if (//vars['CCD_SET'] && vars['CCD_AIR'] &&
+                            vars['CCD_SET'] < 10 && vars['CCD_AIR'] > 30)
+                            dev_sub.push(<span className="label label-warning" key="camera_air_hot">
+                                             Camera electronics is hot: {vars['CCD_AIR'].toFixed(1)} deg
                                          </span>);
 
                         // Latest image previewer
@@ -240,7 +247,39 @@ class FramClient extends React.Component {
                             dev_sub.push(<span className="label label-danger" key="48v_off">
                                            48V is off
                                          </span>);
-                        if (vars['mount_is_on'] == 0 && (client.name == 'cta-n' || client.name == 'auger'))
+
+                        if (client.name == 'auger2') {
+                            if (vars['inv_power_CCD'] == 1)
+                                dev_sub.push(<span className="label label-danger" key="ccd_off">
+                                                 CCD is off
+                                             </span>);
+                            if (vars['inv_power_CMOS'] == 1)
+                                dev_sub.push(<span className="label label-danger" key="cmos_off">
+                                                 CMOS is off
+                                             </span>);
+                            if (vars['inv_power_Pi'] == 1)
+                                dev_sub.push(<span className="label label-danger" key="pi_off">
+                                                 Pi is off
+                                             </span>);
+                            if (vars['power_mount'] == 0)
+                                dev_sub.push(<span className="label label-danger" key="mount_off">
+                                                 Mount is off
+                                             </span>);
+                            if (!vars['oil_level_ok'])
+                                dev_sub.push(<span className="label label-danger" key="low_oil">
+                                                 Low oil
+                                             </span>);
+                            if (!vars['accum_ok'])
+                                dev_sub.push(<span className="label label-danger" key="battery_low">
+                                                 Battery Low
+                                             </span>);
+                            if (vars['motor_is_on'])
+                                dev_sub.push(<span className="label label-info" key="motor_is_on">
+                                                 Motor is ON
+                                             </span>);
+                        }
+
+                        if (vars['mount_is_on'] == 0 && (client.name == 'cta-n' || client.name == 'auger' || client.name == 'auger2'))
                             dev_sub.push(<span className="label label-danger" key="mount_off">
                                            Mount is off
                                          </span>);
@@ -260,6 +299,10 @@ class FramClient extends React.Component {
                             dev_sub.push(<span className="label label-danger" key="battery_low">
                                            Battery Low
                                          </span>);
+                        if (vars['low_oil'])
+                            dev_sub.push(<span className="label label-danger" key="low_oil">
+                                           Low oil
+                                         </span>);
                     }
 
                     // weather
@@ -271,22 +314,36 @@ class FramClient extends React.Component {
                                       wind { vars['windspeed'].toFixed(1) } m/s,
                                       temperature { vars['temperature'].toFixed(1) } C,
                                       humidity { vars['humidity'].toFixed(1) }%,
-                                      pressure { vars['pressure'].toFixed(1) }.
+                                      pressure { vars['pressure'].toFixed(1) },
+                                      dust { vars['dust'].toFixed(1) }.
                                     </span>);
-                        else if (client.name == 'auger')
+                        else if (client.name == 'auger' || client.name == 'auger2')
                             elem = (<span className="text-muted" key={'weather1'}>
                                       wind { (vars['windspeed']/3.6).toFixed(1) } m/s.
                                     </span>);
-                        else if (client.name == 'cta-s0' || client.name == 'cta-s1')
+                        else if ((client.name == 'cta-s0') && vars['WIND_AVG'])
                             elem = (<span className="text-muted" key={'weather1'}>
                                       wind { vars['WIND_AVG'].toFixed(1) } m/s.
                                     </span>);
+                        else if (client.name == 'cta-s1')
+                            elem = (<span className="text-muted" key={'weather1'}>
+                                      wind { vars['windspeed'].toFixed(1) } m/s,
+                                      direction { vars['direction'].toFixed(1) } deg.
+                                    </span>);
 
-                        if (vars['rain'])
+                        if (vars['rain'] && vars['rain'] != 2)
                             elem = [elem, <Label className="danger" key={'weather2'}>Rain</Label>];
 
                         if (elem)
                             dev_sub.push(elem);
+                    }
+
+                    if (name == 'WEATHER2') {
+                        dev_sub.push(<span className="text-muted" key={'weather1'}>
+                                      temperature { vars['temperature'].toFixed(1) } C,
+                                      humidity { vars['humidity'].toFixed(1) }%,
+                                      dew point { vars['dewpoint'].toFixed(1) } C.
+                                    </span>);
                     }
 
                     if (name == 'PARANAL') {
@@ -314,10 +371,16 @@ class FramClient extends React.Component {
                     if (type == 9) {
                         if (vars['last_packet'] && vars['last_packet'] < now() - 1800)
                             dev_sub.push(<span className="label label-warning">Last packet at <UnixTime time={vars['last_packet']}/></span>);
+                        if (!vars['last_packet'])
+                            dev_sub.push(<span className="label label-warning">No GCN connection yet</span>);
                         if (vars['last_target_time'] && vars['last_target_time'] > now() - 0.5*3600)
                             dev_sub.push(<span className="text-warning">Last target: {vars['last_target']} / <a href={this.props.root + client.name + '/targets/'+ vars['last_target_id']} target="_blank">{vars['last_target_id']}</a> at <UnixTime time={vars['last_target_time']}/></span>);
                         else if (vars['last_target_time'] && vars['last_target_time'] > now() - 6*3600)
                             dev_sub.push(<span className="text-default">Last target: {vars['last_target']} / <a href={this.props.root + client.name + '/targets/'+ vars['last_target_id']} target="_blank">{vars['last_target_id']}</a> at <UnixTime time={vars['last_target_time']}/></span>);
+
+                        if (vars['battery.charge'] && vars['battery.charge'] != 100)
+                            dev_sub.push(<span className="label label-danger">Battery {vars['battery.charge']} % : {vars['ups.status']}</span>);
+
                     }
 
                     // executor
@@ -326,6 +389,9 @@ class FramClient extends React.Component {
                             dev_sub.push(<span className="label label-warning">Ignoring day</span>);
                         if (vars['PI'].indexOf('magic') !== -1)
                             dev_sub.push(<span className="label label-success">MAGIC follow-up active</span>);
+                        // MAGIC preview
+                        if (this.props.auth && client.name == 'cta-n' && vars['PI'].indexOf('magic') !== -1)
+                            dev_body = <>{dev_body}<span className="pull-right"><ImageModal title={'Latest VAOD map'} src={this.props.root + client.name + '/jpeg//home/adarith/www/out.png'} activator={<span className="glyphicon glyphicon-picture icon" title="Latest VAOD map"/>} refresh={20000}/></span></>;
                     }
 
                     // imgproc
@@ -374,7 +440,7 @@ class FramClient extends React.Component {
 
                     // UPS
                     if (name == 'UPS') {
-                        if (vars['battery.charge'] && vars['battery.charge'] != 100)
+                        if (vars['battery.charge'] && vars['battery.charge'] < 100)
                             dev_sub.push(<span className="label label-danger">Battery {vars['battery.charge']} % : {vars['ups.status']}</span>);
                     }
                 } else {
@@ -407,13 +473,16 @@ class FramClient extends React.Component {
             commands['Mount'] = {'Park': 'GM2000.park', 'Stop': 'GM2000.stop', 'Toggle': 'DOME.toggle_mount'};
         else if (client.name == 'cta-s0' || client.name == 'cta-s1')
             commands['Mount'] = {'Park': 'T0.park', 'Stop': 'T0.stop', 'On': 'DOME.48VDC=1', 'Off': 'DOME.48VDC=0'};
+        else if (client.name == 'auger2')
+            commands['Mount'] = {'Park': 'T0.park', 'Stop': 'T0.stop', 'Toggle': 'DOME.toggle_mount', 'On': 'DOME.power_mount=1', 'Off': 'DOME.power_mount=0'};
 
         commands['Dome'] = {'Open': 'DOME.open', 'Close': 'DOME.close', 'Reset Emergency': 'DOME.reset_emergency', 'Reset next': 'DOME.reset_next'};
 
         if (client.name == 'cta-n') {
             commands['12V'] = {'On': "DOME.12VDC=1", 'Off': "DOME.12VDC=0"};
         } else if (client.name == 'auger') {
-            commands['12V'] = {'On': "DOME.12V=1", 'Off': "DOME.12V=0"};
+            commands['12V'] = {'On': "DOME.12V_power=1", 'Off': "DOME.12V_power=0"};
+	    commands['Pi'] = {'On': "DOME.pi_power=1", 'Off': "DOME.pi_power=0"};
         } else if (client.name == 'cta-s0' || client.name == 'cta-s1') {
             commands['12V'] = {'On': "DOME.12VDC=1", 'Off': "DOME.12VDC=0"};
         }
@@ -426,6 +495,15 @@ class FramClient extends React.Component {
         if (client.name == 'auger') {
             commands['NF4'] = {'Cooling ON': 'NF4.CCD_SET=-20', 'Cooling OFF': 'NF4.CCD_SET=50'};
             commands['WF8'] = {'Cooling ON': 'WF8.CCD_SET=-20', 'Cooling OFF': 'WF8.CCD_SET=50'};
+        }
+
+        if (client.name == 'auger2') {
+            commands['Pi'] = {'On': 'DOME.inv_power_Pi=0', 'Off': 'DOME.inv_power_Pi=1'};
+            commands['Heater'] = {'On': 'DOME.inv_power_lens_heater=0', 'Off': 'DOME.inv_power_lens_heater=1'};
+            commands['WF0'] = {'Cooling ON': 'WF0.CCD_SET=-20', 'Cooling OFF': 'WF0.CCD_SET=50', 'On': 'DOME.inv_power_CCD=0', 'Off': 'DOME.inv_power_CCD=1'};
+            commands['WF1'] = {'Cooling ON': 'WF1.CCD_SET=-20', 'Cooling OFF': 'WF1.CCD_SET=50', 'On': 'DOME.inv_power_CMOS=0', 'Off': 'DOME.inv_power_CMOS=1'};
+            commands['F0'] = {'-100': 'F0.FOC_TAR-=100', '-10': 'F0.FOC_TAR-=10', '+10': 'F0.FOC_TAR+=10', '+100': 'F0.FOC_TAR+=100'};
+            commands['F1'] = {'-100': 'F1.FOC_TAR-=100', '-10': 'F1.FOC_TAR-=10', '+10': 'F1.FOC_TAR+=10', '+100': 'F1.FOC_TAR+=100'};
         }
 
         if (client.name == 'cta-s0' || client.name == 'cta-s1') {

@@ -2,7 +2,43 @@
 class CameraModal extends React.Component {
     constructor(props, context) {
         super(props, context);
-        this.state = {show: false};
+        this.state = {show: false, focpos: null};
+    }
+
+    sendCommandEx(cmd, data) {
+        $.ajax({
+            url: this.props.root + this.props.client.name + "/api/" + cmd,
+            dataType : "json",
+            timeout : 10000,
+            context: this,
+            data: data,
+
+            success: function(json){
+                if (json.ret == 0)
+                    this.message(json.ret + ' ' + cmd, 'text-success');
+                else
+                    this.message(json.ret + ' ' + cmd + ' ' + JSON.stringify(data), 'text-danger');
+
+                if(this.props.onSuccess)
+                    this.props.onSuccess();
+            },
+
+            error: function(){
+                this.message("API request error: " + cmd + " " + JSON.stringify(data), 'text-danger');
+            },
+
+            complete: function(){
+                this.requestState();
+            }
+        });
+    }
+
+    sendCommand(command, device=this.props.name) {
+        this.sendCommandEx('cmd', {d: device, c: command});
+    }
+
+    sendVariable(name, value) {
+        this.sendCommandEx('set', {d: this.props.name, n: name, v: value});
     }
 
     shouldComponentUpdate(nextProps, nextState) {
@@ -19,6 +55,10 @@ class CameraModal extends React.Component {
         return false;
     }
 
+    handleChangeFocpos(event) {
+        this.setState({focpos: event.target.value});
+    }
+
     render() {
         var url = this.props.root + this.props.client.name + '/jpeg/' + this.props.variables.last_preview_image + '?time=' + this.props.variables.last_preview_time;
         var src = this.props.root + this.props.client.name + '/preview/' + this.props.variables.last_preview_image + '?ps=512&lb=&time=' + this.props.variables.last_preview_time;
@@ -32,7 +72,7 @@ class CameraModal extends React.Component {
               </span>
 
               {/* Modal window */}
-              <Modal bsSize="lg" show={this.state.show} onHide={() => this.setState({show: false})}>
+                <Modal bsSize="lg" show={this.state.show} onHide={() => this.setState({show: false})}>
                 <Modal.Header closeButton>
                   <Modal.Title>{title}</Modal.Title>
                 </Modal.Header>
@@ -41,6 +81,17 @@ class CameraModal extends React.Component {
                   <img className="img img-responsive center-block" src={src} onClick={()=>window.open(url, '_blank')}/>
                 </Modal.Body>
                 <Modal.Footer>
+                  <span className="pull-left">
+                      <Form inline onSubmit={evt => {this.sendVariable('focpos', this.state.focpos); evt.preventDefault();}}>
+                        <Button bsStyle="default" onClick={() => this.sendCommand('expose')}>Expose</Button>
+                        {' '}
+                        <FormControl type="text" size={5}
+                                     placeholder="focpos"
+                                     value={this.state.focpos}
+                                     onChange={(evt) => this.handleChangeFocpos(evt)}/>
+                    </Form>
+                  </span>
+
                   <Button bsStyle="default" onClick={() => this.setState({show: false})}>Close</Button>
                 </Modal.Footer>
               </Modal>
@@ -49,5 +100,4 @@ class CameraModal extends React.Component {
     }
 }
 
-CameraModal.defaultProps = {refresh:"5000"};
 CameraModal = ReactRedux.connect(mapStateToProps)(CameraModal);

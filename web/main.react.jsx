@@ -24,7 +24,8 @@ class Monitor extends React.Component {
                 if(this.props.view == 'compact' && contents.length == 2) {
                     contents2.push(<Row style={{'margin':0, 'padding':0}}>{contents}</Row>);
                     contents = [];
-                }
+                } else if(this.props.view == 'compact' && i == clients_list.length-1)
+                    contents2.push(<Row style={{'margin':0, 'padding':0}}>{contents}</Row>);
             }
         }
 
@@ -37,6 +38,11 @@ class Monitor extends React.Component {
               <div style={{marginBottom: "0.5em"}}>
                 <span className="pull-left">
                   <ViewSelector view={this.props.view} onChange={(_)=>this.props.dispatch(globalSetView(_))}/>
+                </span>
+                <span className="pull-left">
+                  {window.location.pathname.includes('dark')
+                   ? <a href={this.props.root}>Night</a>
+                   : <a href={this.props.root + 'dark'}>Day</a>}
                 </span>
                 <span className="pull-right">
                   <AuthModal/>
@@ -103,7 +109,7 @@ class ViewSelector extends React.Component {
 
 // Global Redux store
 
-const initialState = {auth: false, username: '', root: window.location.pathname, view: getCookie('view', 'full')};
+const initialState = {auth: false, username: '', root: dirname(window.location.pathname)+'/', view: getCookie('view', 'full')};
 
 const globalSetAuth = value => ({type: 'SET_AUTH', value: value});
 const globalSetUsername = value => ({type: 'SET_USERNAME', value: value});
@@ -117,7 +123,7 @@ function globalReducer(state=initialState, action)
     case 'SET_USERNAME':
         return Object.assign({}, state, {username: action.value});
     case 'SET_VIEW':
-        setCookie('view', action.value);
+        setCookie('view', action.value, 365);
         return Object.assign({}, state, {view: action.value});
     default:
         return state;
