@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from twisted.internet import reactor, task
 from twisted.protocols.basic import LineReceiver
 from twisted.web.server import Site, GzipEncoderFactory
@@ -13,18 +13,16 @@ from twisted.python.compat import urlquote
 from twistedauth import wrap_with_auth as Auth
 
 import os, sys, posixpath, datetime, base64, re, glob
-import urlparse
+import urllib.parse
 import json
 import numpy as np
 from collections import OrderedDict
 
-from StringIO import StringIO
+from io import StringIO
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.dates import DateFormatter
 from matplotlib.ticker import ScalarFormatter, LogLocator, LinearLocator, MaxNLocator, NullLocator
-
-from db import DB
 
 def catch(func):
     '''Decorator to catch errors inside functions and print tracebacks'''
@@ -39,7 +37,7 @@ def catch(func):
 
 def serve_json(request, **kwargs):
     request.responseHeaders.setRawHeaders("Content-Type", ['application/json'])
-    return json.dumps(kwargs)
+    return json.dumps(kwargs).encode()
 
 def make_plot(file, obj, client_name, plot_name, size=800):
     plot = obj['clients'][client_name]['plots'][plot_name]
@@ -112,11 +110,16 @@ class WebMonitor(Resource):
     @catch
     def REST_request(self, baseurl='', path='/', user=None, password=None, repeat=None, name=None):
         '''Initiate (repeating) '''
-        headers = Headers({'User-Agent': ['Twisted Web Client'],
-                           'Authorization': ["Basic " + base64.encodestring('%s:%s' % (user, password)).strip()]})
+        headers = Headers({
+            'User-Agent': ['Twisted Web Client'],
+            'Authorization': [
+                "Basic " + base64.encodebytes(
+                    ('%s:%s' % (user, password)).encode()).decode().strip()
+            ]
+        })
 
-        url = urlparse.urljoin(baseurl,  path)
-        defer = self._REST_agent.request('GET', url, headers, None)
+        url = urllib.parse.urljoin(baseurl,  path)
+        defer = self._REST_agent.request(b'GET', url.encode(), headers, None)
 
         defer.addCallback(self._REST_callback, baseurl=baseurl, path=path, name=name)
         defer.addErrback(self._REST_errback, baseurl=baseurl, path=path, name=name)
@@ -135,7 +138,7 @@ class WebMonitor(Resource):
 
     @catch
     def _REST_errback(self, response, baseurl=None, path=None, name=None):
-        if self.object['clients'].has_key(name):
+        if name in self.object['clients']:
             self.object['clients'][name]['connected'] = False
 
     @catch
@@ -145,7 +148,7 @@ class WebMonitor(Resource):
     @catch
     def REST_process(self, body, baseurl=None, path=None, name=None):
         '''Processing of reply from REST API endpoint'''
-        if path == '/api/getall' and name and self.object['clients'].has_key(name):
+        if path == '/api/getall' and name and name in self.object['clients']:
             status = json.loads(body, object_pairs_hook=OrderedDict)
             # self.object['clients'][name]['status'] = status
             self.object['status'][name] = status
@@ -155,7 +158,7 @@ class WebMonitor(Resource):
             # TODO: Store to database before modifying the status
 
             for _ in self.object['clients'][name]['devices']:
-                if not self.object['status'][name].has_key(_):
+                if _ not in self.object['status'][name]:
                     self.object['status'][name][_] = {'connected':False}
                     self.object['status'][name][_]['last_status'] = self.object['clients'][name]['devices_last_status'][_]
                 else:
@@ -171,7 +174,7 @@ class WebMonitor(Resource):
                         self.object['status'][name][_]['order'] = 100
 
             # We have to keep the history of values for some variables for plots
-            if self.object['values'].has_key(name):
+            if name in self.object['values']:
                 for value_name in self.object['values'][name]:
                     if value_name == 'time':
                         value = datetime.datetime.utcnow()
@@ -194,30 +197,31 @@ class WebMonitor(Resource):
     @catch
     def render_GET(self, request):
         '''Processing of HTTP GET query from frontend'''
-        q = urlparse.urlparse(request.uri)
-        args = urlparse.parse_qs(q.query)
-        qs = q.path.split('/')
+        q = urllib.parse.urlparse(request.uri)
+        args = urllib.parse.parse_qs(q.query.decode())
+        path = q.path.decode()
+        qs = path.split('/')
 
-        if q.path == '/monitor/status':
+        if path == '/monitor/status':
             return serve_json(request,
                               clients = self.object['clients'],
                               status = self.object['status'],
-                              auth = self.object['sessions'].has_key(request.getSession().uid),
+                              auth = request.getSession().uid in self.object['sessions'],
                               username = self.object['sessions'].get(request.getSession().uid))
 
-        elif q.path == '/monitor/auth':
+        elif path == '/monitor/auth':
             result = False
 
-            if args.has_key('username') and args.has_key('password') and args['username'][0] == self.object['api_username'] and args['password'][0] == self.object['api_password']:
-                print "Authorized session", request.getSession().uid
+            if 'username' in args and 'password' in args and args['username'][0] == self.object['api_username'] and args['password'][0] == self.object['api_password']:
+                print("Authorized session", request.getSession().uid)
                 self.object['sessions'][request.getSession().uid] = args.get('username')
                 request.getSession().sessionTimeout = 24*3600*365
                 result = True
                 # Crude hack to keep the session cookie longer
                 cookiename = "_".join(['TWISTED_SESSION'] + request.sitepath)
-                request.addCookie(cookiename, request.getSession().uid, path='/', max_age=365*3600*24)
+                request.addCookie(cookiename, request.getSession().uid, path='/', max_age=str(365*3600*24))
             else:
-                print "De-authorized session", request.getSession().uid
+                print("De-authorized session", request.getSession().uid)
                 self.object['sessions'].pop(request.getSession().uid, None)
                 request.getSession().expire()
 
@@ -230,7 +234,7 @@ class WebMonitor(Resource):
             request.responseHeaders.setRawHeaders("Content-Type", ['image/png'])
             request.responseHeaders.setRawHeaders("Content-Length", [s.len])
             request.responseHeaders.setRawHeaders("Cache-Control", ['no-store, no-cache, must-revalidate, max-age=0'])
-            return s.getvalue()
+            return s.getvalue().encode()
 
         else:
             return q.path;
@@ -240,7 +244,8 @@ class ServeFiles(Resource):
     isLeaf = True
 
     @catch
-    def __init__(self, glob='*', type='text/plain'):
+    def __init__(self, files=None, glob='*', type='text/plain'):
+        self.files = files
         self.glob = glob
         self.type = type
 
@@ -248,11 +253,15 @@ class ServeFiles(Resource):
     def render_GET(self, request):
         result = "";
 
-        for filename in glob.glob(self.glob):
+        if self.files is None:
+            files = glob.glob(self.glob)
+        else:
+            files = self.files
+        for filename in files:
             result += open(filename).read()
 
         request.responseHeaders.setRawHeaders("Content-Type", [self.type])
-        return result
+        return result.encode()
 
 class ReverseProxyResourceAuth(ReverseProxyResource):
     def __init__(self, host, port, path, reactor=reactor, username=None, password=None, base=None, object=None):
@@ -264,11 +273,15 @@ class ReverseProxyResourceAuth(ReverseProxyResource):
         return ReverseProxyResource.__init__(self, host, port, path, reactor)
 
     def render(self, request):
-        if not obj['sessions'].has_key(request.getSession().uid):
+        if request.getSession().uid not in obj['sessions']:
             return "Not authorized"
 
         if self._username:
-            request.requestHeaders.setRawHeaders('Authorization', ["Basic " + base64.encodestring('%s:%s' % (self._username, self._password)).strip()])
+            request.requestHeaders.setRawHeaders(
+                'Authorization', [
+                    "Basic " + base64.encodebytes(('%s:%s' % (self._username, self._password)).encode()).decode().strip()
+                ]
+            )
 
         if self._base or request.getHeader('X-Request-Base'):
             base = ""
@@ -284,7 +297,18 @@ class ReverseProxyResourceAuth(ReverseProxyResource):
         return ReverseProxyResource.render(self, request)
 
     def getChild(self, path, request):
-        child = ReverseProxyResourceAuth(self.host, self.port, self.path + b'/' + urlquote(path, safe=b"").encode('utf-8'), reactor=self.reactor, username=self._username, password=self._password, base=self._base)
+        fullpath = self.path + b'/' + urlquote(path, safe=b"").encode()
+        # print(self.path.encode() + b'/' +urlquote(path, safe=b"").encode())
+        # print(fullpath)
+        child = ReverseProxyResourceAuth(
+            self.host,
+            self.port,
+            fullpath,
+            reactor=self.reactor,
+            username=self._username,
+            password=self._password,
+            base=self._base
+        )
         return EncodingResourceWrapper(child, [GzipEncoderFactory()])
 
 def loadINI(filename, obj):
@@ -337,8 +361,8 @@ def loadINI(filename, obj):
     if len(conf):
         result = conf.validate(Validator())
         if result != True:
-            print "Config file failed validation: %s" % confname
-            print result
+            print("Config file failed validation: %s" % confname)
+            print(result)
 
             raise RuntimeError
 
@@ -354,7 +378,7 @@ def loadINI(filename, obj):
 
             obj['values'][sname] = {}
 
-            if section.has_key('plots'):
+            if 'plots' in section:
                 values = []
 
                 # Parse parameters of plots
@@ -395,7 +419,7 @@ if __name__ == '__main__':
         if m:
             name,baseurl = m.group(2,3)
 
-            if obj['clients'].has_key(name):
+            if name in obj['clients']:
                 obj['clients'][name]['baseurl'] = baseurl
             else:
                 obj['clients'][name] = {'baseurl':baseurl, 'name':name, 'description':name, 'template':'default.html', 'update_interval':5.0, 'plots':None}
@@ -407,16 +431,29 @@ if __name__ == '__main__':
     # Serve files from web
     webmon = WebMonitor(object=obj)
 
-    root = File("web")
-    root.putChild("", File('web/main.html'))
-    root.putChild("dark", File('web/main.dark.html'))
-    root.putChild("monitor", EncodingResourceWrapper(webmon, [GzipEncoderFactory()]))
+    root = File(b"web")
+    root.putChild(b"", File('web/main.html'))
+    root.putChild(b"dark", File('web/main.dark.html'))
+    root.putChild(b"monitor", EncodingResourceWrapper(webmon, [GzipEncoderFactory()]))
 
-    root.putChild("all.jsx", ServeFiles('web/*.jsx'))
+    # root.putChild(b"all.jsx", ServeFiles('web/*.jsx'))
+    root.putChild(b"all.jsx", ServeFiles(files=[
+        'web/cmdline.jsx',
+        'web/modal-camera.react.jsx',
+        'web/modal-device.react.jsx',
+        'web/modal-image.react.jsx',
+        'web/modal-queue.react.jsx',
+        'web/modal.react.jsx',
+        'web/react-fast-compare.jsx',
+        'web/utils.react.jsx',
+        'web/default.react.jsx',
+        'web/fram.react.jsx',
+        'web/main.react.jsx',
+    ]))
 
     if obj['username']:
-        print 'Username:', obj['username']
-        print 'Password:', obj['password']
+        print('Username:', obj['username'])
+        print('Password:', obj['password'])
         site = Site(Auth(root, {obj['username']:obj['password']}))
 
         # Do not expose the username and password
@@ -425,15 +462,33 @@ if __name__ == '__main__':
     else:
         site = Site(root)
 
-    for name,c in obj['clients'].items():
-        print "Adding periodic polling of status from", c['name'], "at",  c['baseurl'], "every", c['update_interval'], "s"
-        webmon.REST_request(c['baseurl'], '/api/getall', user=c['username'], password=c['password'], repeat=c['update_interval'], name=c['name'])
+    for name,c in list(obj['clients'].items()):
+        print("Adding periodic polling of status from", c['name'], "at",  c['baseurl'], "every", c['update_interval'], "s")
+        webmon.REST_request(
+            c['baseurl'],
+            '/api/getall',
+            user=c['username'],
+            password=c['password'],
+            repeat=c['update_interval'],
+            name=c['name']
+        )
 
         if obj['api_username']:
             # Reverse proxy for HTTPD web interface
-            url = urlparse.urlparse(c['baseurl'])
-            root.putChild(c['name'], ReverseProxyResourceAuth(url.hostname, url.port, url.path, username=c['username'], password=c['password'], base='/'+c['name'], object=obj))
-            print "Direct access to RTS2 HTTPD exposed under", "/"+c['name']+"/"
+            url = urllib.parse.urlparse(c['baseurl'])
+            root.putChild(
+                c['name'].encode(),
+                ReverseProxyResourceAuth(
+                    url.hostname,
+                    url.port,
+                    url.path.encode(),
+                    username=c['username'],
+                    password=c['password'],
+                    base='/'+c['name'],
+                    object=obj
+                )
+            )
+            print("Direct access to RTS2 HTTPD exposed under", "/"+c['name']+"/")
 
         # Do not expose the username and password
         c['username'] = '*'
@@ -445,7 +500,7 @@ if __name__ == '__main__':
 
     obj['sessions'] = {}
 
-    print "Listening for incoming HTTP connections on port %d" % options.http_port
+    print("Listening for incoming HTTP connections on port %d" % options.http_port)
     TCP4ServerEndpoint(reactor, options.http_port).listen(site)
 
     reactor.run()
