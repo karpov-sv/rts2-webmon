@@ -283,7 +283,7 @@ class ReverseProxyResourceAuth(ReverseProxyResource):
                 ]
             )
 
-        if self._base or request.getHeader('X-Request-Base'):
+        if self._base or request.getHeader(b'X-Request-Base'):
             base = ""
 
             if request.getHeader('X-Request-Base'):
