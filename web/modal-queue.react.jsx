@@ -232,7 +232,13 @@ class QueueModal extends React.Component {
         var t1 = this.state.time1 ? this.state.time1.unix() : "nan";
         var t2 = this.state.time2 ? this.state.time2.unix() : "nan";
 
-        if (t1 || t2) {
+        var error = queueTimesError(Number(t1), Number(t2));
+        if (error) {
+            this.message(error, 'text-danger');
+            return;
+        }
+
+        if (this.state.time1 || this.state.time2) {
             this.sendCommand('queue_at ' + this.state.queue + ' ' + id + ' ' + t1 + ' ' + t2);
         } else {
             this.sendCommand('queue ' + this.state.queue + ' ' + id);
@@ -271,8 +277,22 @@ class QueueModal extends React.Component {
         if (!time)
             return;
 
-        var unix1 = moment(time, 'YYYY-MM-DD HH:mm:ss ZZ').unix();
-        var unix2 = moment(time_end, 'YYYY-MM-DD HH:mm:ss ZZ').unix();
+        var t1 = parseQueueTime(time);
+        var t2 = parseQueueTime(time_end);
+
+        if (t1 === undefined || t2 === undefined) {
+            this.message("Cannot parse time: " + time, 'text-danger');
+            return;
+        }
+
+        var unix1 = t1 ? t1.unix() : NaN;
+        var unix2 = t2 ? t2.unix() : NaN;
+
+        var error = queueTimesError(unix1, unix2);
+        if (error) {
+            this.message(error, 'text-danger');
+            return;
+        }
 
         this.sendCommand('update_times ' + queue + ' ' + id + ' ' + unix1 + ' ' + unix2);
     }
@@ -281,8 +301,22 @@ class QueueModal extends React.Component {
         if (!time)
             return;
 
-        var unix1 = moment(time_start, 'YYYY-MM-DD HH:mm:ss ZZ').unix();
-        var unix2 = moment(time, 'YYYY-MM-DD HH:mm:ss ZZ').unix();
+        var t1 = parseQueueTime(time_start);
+        var t2 = parseQueueTime(time);
+
+        if (t1 === undefined || t2 === undefined) {
+            this.message("Cannot parse time: " + time, 'text-danger');
+            return;
+        }
+
+        var unix1 = t1 ? t1.unix() : NaN;
+        var unix2 = t2 ? t2.unix() : NaN;
+
+        var error = queueTimesError(unix1, unix2);
+        if (error) {
+            this.message(error, 'text-danger');
+            return;
+        }
 
         this.sendCommand('update_times ' + queue + ' ' + id + ' ' + unix1 + ' ' + unix2);
     }
@@ -420,6 +454,9 @@ class QueueModal extends React.Component {
 
         window.qstate = this.state;
 
+        var times_error = queueTimesError(this.state.time1 ? this.state.time1.unix() : NaN,
+                                          this.state.time2 ? this.state.time2.unix() : NaN);
+
         return (
             <>
               {/* Activator element */}
@@ -500,8 +537,8 @@ class QueueModal extends React.Component {
                       </InputGroup.Button>
 
                       <InputGroup.Button className="input-group-append">
-                        <Button title="Queue selected target"
-                                disabled={!this.state.target_selected || !this.state.target_selected.length}
+                        <Button title={times_error ? times_error : "Queue selected target"}
+                                disabled={!this.state.target_selected || !this.state.target_selected.length || times_error != null}
                                 className="btn-outline-secondary"
                                 onClick={() => this.handleQueue()}>
                           Queue
@@ -519,8 +556,8 @@ class QueueModal extends React.Component {
                             <span className="input-group-text">Start Time:</span>
                           </InputGroup.Addon>
 
-                          <ReactDatePicker selected={this.state.time1} onChange={(time)=>this.setState({time1:fix(time)})}
-                                           onChangeRaw={(x)=>{if(moment(x.target.value, 'YYYY-MM-DD HH:mm:ss ZZ').isValid()) this.setState({time1: moment(x.target.value, 'YYYY-MM-DD HH:mm:ss ZZ')});}}
+                          <ReactDatePicker selected={this.state.time1} onChange={(time, evt)=>this.setState({time1:fix(time, evt)})}
+                                           onChangeRaw={(x)=>{var t = parseQueueTime(x.target.value); if(t !== undefined) this.setState({time1: t});}}
                                            placeholderText=" --- " showTimeSelect dateFormat='YYYY-MM-DD HH:mm:ss ZZ'
                                            timeFormat='HH:mm:ss' disabledKeyboardNavigation
                                            className="form-control" popperPlacement="top-end" minDate={new Date()} />
@@ -534,11 +571,12 @@ class QueueModal extends React.Component {
                             <span className="input-group-text">End Time:</span>
                           </InputGroup.Addon>
 
-                          <ReactDatePicker selected={this.state.time2} onChange={(time)=>this.setState({time2:fix(time)})}
-                                           onChangeRaw={(x)=>{if(moment(x.target.value, 'YYYY-MM-DD HH:mm:ss ZZ').isValid()) this.setState({time2: moment(x.target.value, 'YYYY-MM-DD HH:mm:ss ZZ')});}}
+                          <ReactDatePicker selected={this.state.time2} onChange={(time, evt)=>this.setState({time2:fix(time, evt)})}
+                                           onChangeRaw={(x)=>{var t = parseQueueTime(x.target.value); if(t !== undefined) this.setState({time2: t});}}
                                            placeholderText=" --- " showTimeSelect dateFormat='YYYY-MM-DD HH:mm:ss ZZ'
                                            timeFormat='HH:mm:ss' disabledKeyboardNavigation
-                                           className="form-control" popperPlacement="top-end" minDate={new Date()} />
+                                           className={"form-control" + (times_error ? " alert-danger" : "")} title={times_error}
+                                           popperPlacement="top-end" minDate={this.state.time1 ? this.state.time1.clone() : moment()} />
 
                         </InputGroup>
                       </Col>
@@ -573,10 +611,38 @@ class QueueModal extends React.Component {
     }
 }
 
-function fix(time) {
-    var newtime = time;
-    newtime.seconds(0);
-    return newtime;
+// Returns error message if the queue time interval is invalid, null otherwise.
+// Unset (NaN) times are allowed and mean "no limit".
+function queueTimesError(unix1, unix2) {
+    if (isFinite(unix1) && isFinite(unix2) && unix2 <= unix1)
+        return "End time must be later than start time";
+
+    if (isFinite(unix2) && unix2 <= now())
+        return "End time is in the past";
+
+    return null;
+}
+
+// Parse queue time typed by the user. Returns moment for a valid time, null
+// for an explicitly unset one (empty, "---" or "nan"), undefined if invalid.
+// Parsing is strict so that partially typed values are not accepted.
+function parseQueueTime(text) {
+    text = (text || '').trim();
+
+    if (text == '' || text == '---' || text.toLowerCase() == 'nan')
+        return null;
+
+    var t = moment(text, ['YYYY-MM-DD HH:mm:ss ZZ', 'YYYY-MM-DD HH:mm:ss', 'YYYY-MM-DD HH:mm'], true);
+
+    return t.isValid() ? t : undefined;
+}
+
+// Round the time picked from the calendar to whole minutes; keep typed values as is
+function fix(time, evt) {
+    if (time && !(evt && evt.type == 'change'))
+        time.seconds(0);
+
+    return time;
 }
 
 QueueModal.defaultProps = {refresh:"10000"};
