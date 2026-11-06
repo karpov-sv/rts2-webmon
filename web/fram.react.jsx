@@ -72,16 +72,16 @@ class FramClient extends React.Component {
             // Current night and Moon info
             if (status['centrald'] && status['centrald'].connected && status['centrald'].d && status['centrald'].d.lunar_phase) {
                 if (this.props.view == 'compact') {
-                    var mpopup = "Rise " + unixtime(status['centrald'].d.moon_rise) + "\nSet " + unixtime(status['centrald'].d.moon_set) + "\nPhase " + status['centrald'].d.lunar_phase.toFixed(1) + "\nLimb " + status['centrald'].d.lunar_limb.toFixed(1);
+                    var mpopup = "Rise " + unixtime(status['centrald'].d.moon_rise) + "\nSet " + unixtime(status['centrald'].d.moon_set) + "\nPhase " + parseFloat(status['centrald'].d.lunar_phase).toFixed(1) + "\nLimb " + parseFloat(status['centrald'].d.lunar_limb).toFixed(1);
 
                     night_info = (
                         <div className="small text-muted" style={{padding: "5px"}}>
                           Night start <span className="text-info"><UnixTime time={status['centrald'].d.night_beginning}/></span> end <span className="text-info"><UnixTime time={status['centrald'].d.night_ending}/></span>.
 
-                          Sun alt <span className="text-info">{status['centrald'].d.sun_alt.toFixed(1)}</span> deg.
+                          Sun alt <span className="text-info">{parseFloat(status['centrald'].d.sun_alt).toFixed(1)}</span> deg.
                           &nbsp;
                           <span title={mpopup}>
-                            Moon alt <span className="text-info">{status['centrald'].d.moon_alt.toFixed(1)}</span> deg.
+                            Moon alt <span className="text-info">{parseFloat(status['centrald'].d.moon_alt).toFixed(1)}</span> deg.
                           </span>
                         </div>
                     );
@@ -90,11 +90,11 @@ class FramClient extends React.Component {
                         <div className="small text-muted" style={{padding: "5px"}}>
                           Night start <span className="text-info"><UnixTime time={status['centrald'].d.night_beginning}/></span> end <span className="text-info"><UnixTime time={status['centrald'].d.night_ending}/></span>.
 
-                          Sun alt <span className="text-info">{status['centrald'].d.sun_alt.toFixed(1)}</span> deg.
+                          Sun alt <span className="text-info">{parseFloat(status['centrald'].d.sun_alt).toFixed(1)}</span> deg.
 
                           Moon rise <span className="text-info"><UnixTime time={status['centrald'].d.moon_rise}/></span> set <span className="text-info"><UnixTime time={status['centrald'].d.moon_set}/></span>,
 
-                        phase <span className="text-info">{status['centrald'].d.lunar_phase.toFixed(1)}</span> deg, limb <span className="text-info">{status['centrald'].d.lunar_limb.toFixed(1)}</span> deg, alt <span className="text-info">{status['centrald'].d.moon_alt.toFixed(1)}</span> deg.
+                          phase <span className="text-info">{parseFloat(status['centrald'].d.lunar_phase).toFixed(1)}</span> deg, limb <span className="text-info">{parseFloat(status['centrald'].d.lunar_limb).toFixed(1)}</span> deg, alt <span className="text-info">{parseFloat(status['centrald'].d.moon_alt).toFixed(1)}</span> deg.
                             </div>
                     );
                 }
@@ -209,7 +209,7 @@ class FramClient extends React.Component {
                         if (//vars['CCD_SET'] && vars['CCD_AIR'] &&
                             vars['CCD_SET'] < 10 && vars['CCD_AIR'] > 30)
                             dev_sub.push(<span className="label label-warning" key="camera_air_hot">
-                                             Camera electronics is hot: {vars['CCD_AIR'].toFixed(1)} deg
+                                           Camera electronics is hot: {parseFloat(vars['CCD_AIR']).toFixed(1)} deg
                                          </span>);
 
                         // Latest image previewer
@@ -249,15 +249,15 @@ class FramClient extends React.Component {
                                          </span>);
 
                         if (client.name == 'auger2') {
-                            if (vars['inv_power_CCD'] == 1)
+                            if (vars['power_CCD'] == 0)
                                 dev_sub.push(<span className="label label-danger" key="ccd_off">
                                                  CCD is off
                                              </span>);
-                            if (vars['inv_power_CMOS'] == 1)
+                            if (vars['power_CMOS'] == 0)
                                 dev_sub.push(<span className="label label-danger" key="cmos_off">
                                                  CMOS is off
                                              </span>);
-                            if (vars['inv_power_Pi'] == 1)
+                            if (vars['power_Pi'] == 0)
                                 dev_sub.push(<span className="label label-danger" key="pi_off">
                                                  Pi is off
                                              </span>);
@@ -270,8 +270,8 @@ class FramClient extends React.Component {
                                                  Low oil
                                              </span>);
                             if (!vars['accum_ok'])
-                                dev_sub.push(<span className="label label-danger" key="battery_low">
-                                                 Battery Low
+                                dev_sub.push(<span className="label label-danger" key="accum_low">
+                                                 Accumulator Pressure Low
                                              </span>);
                             if (vars['motor_is_on'])
                                 dev_sub.push(<span className="label label-info" key="motor_is_on">
@@ -311,24 +311,24 @@ class FramClient extends React.Component {
 
                         if (client.name == 'cta-n')
                             elem = (<span className="text-muted" key={'weather1'}>
-                                      wind { vars['windspeed'].toFixed(1) } m/s,
-                                      temperature { vars['temperature'].toFixed(1) } C,
-                                      humidity { vars['humidity'].toFixed(1) }%,
-                                      pressure { vars['pressure'].toFixed(1) },
-                                      dust { vars['dust'].toFixed(1) }.
+                                      wind { parseFloat(vars['windspeed']).toFixed(1) } m/s,
+                                      temperature { parseFloat(vars['temperature']).toFixed(1) } C,
+                                      humidity { parseFloat(vars['humidity']).toFixed(1) }%,
+                                      pressure { parseFloat(vars['pressure']).toFixed(1) },
+                                      dust { parseFloat(vars['dust']).toFixed(1) }.
                                     </span>);
                         else if (client.name == 'auger' || client.name == 'auger2')
                             elem = (<span className="text-muted" key={'weather1'}>
-                                      wind { (vars['windspeed']/3.6).toFixed(1) } m/s.
+                                      wind { (parseFloat(vars['windspeed'])/3.6).toFixed(1) } m/s.
                                     </span>);
                         else if ((client.name == 'cta-s0') && vars['WIND_AVG'])
                             elem = (<span className="text-muted" key={'weather1'}>
-                                      wind { vars['WIND_AVG'].toFixed(1) } m/s.
+                                      wind { parseFloat(vars['WIND_AVG']).toFixed(1) } m/s.
                                     </span>);
                         else if (client.name == 'cta-s1')
                             elem = (<span className="text-muted" key={'weather1'}>
-                                      wind { vars['windspeed'].toFixed(1) } m/s,
-                                      direction { vars['direction'].toFixed(1) } deg.
+                                      wind { parseFloat(vars['windspeed']).toFixed(1) } m/s,
+                                      direction { parseFloat(vars['direction']).toFixed(1) } deg.
                                     </span>);
 
                         if (vars['rain'] && vars['rain'] != 2)
@@ -340,18 +340,18 @@ class FramClient extends React.Component {
 
                     if (name == 'WEATHER2') {
                         dev_sub.push(<span className="text-muted" key={'weather1'}>
-                                      temperature { vars['temperature'].toFixed(1) } C,
-                                      humidity { vars['humidity'].toFixed(1) }%,
-                                      dew point { vars['dewpoint'].toFixed(1) } C.
+                                       temperature { parseFloat(vars['temperature']).toFixed(1) } C,
+                                       humidity { parseFloat(vars['humidity']).toFixed(1) }%,
+                                       dew point { parseFloat(vars['dewpoint']).toFixed(1) } C.
                                     </span>);
                     }
 
                     if (name == 'PARANAL') {
                         dev_sub.push(<span className="text-muted" key={'weather1'}>
-                                      wind { vars['windspeed'].toFixed(1) } m/s,
-                                      temperature { vars['temperature'].toFixed(1) } C,
-                                      humidity { vars['humidity'].toFixed(1) }%,
-                                      pressure { vars['pressure'].toFixed(1) }.
+                                       wind { parseFloat(vars['windspeed']).toFixed(1) } m/s,
+                                       temperature { parseFloat(vars['temperature']).toFixed(1) } C,
+                                       humidity { parseFloat(vars['humidity']).toFixed(1) }%,
+                                       pressure { parseFloat(vars['pressure']).toFixed(1) }.
                                     </span>);
                     }
 
@@ -398,8 +398,8 @@ class FramClient extends React.Component {
                     if (type == 21) {
                         if (!vars['apply_corrections'])
                             dev_sub.push(<span className="label label-warning">Astrometric corrections disabled</span>);
-                        if (vars['free_diskspace'] && vars['free_diskspace']/1024/1024/1024 < 10)
-                            dev_sub.push(<span className="label label-danger">Low disk space: {(vars['free_diskspace']/1024/1024/1024).toFixed(1)} Gb</span>);
+                        if (vars['free_diskspace'] && vars['free_diskspace']/1024/1024/1024 < 60)
+                            dev_sub.push(<span className="label label-danger">Low disk space: {parseFloat((vars['free_diskspace'])/1024/1024/1024).toFixed(1)} Gb</span>);
 
                     }
 
@@ -498,10 +498,10 @@ class FramClient extends React.Component {
         }
 
         if (client.name == 'auger2') {
-            commands['Pi'] = {'On': 'DOME.inv_power_Pi=0', 'Off': 'DOME.inv_power_Pi=1'};
-            commands['Heater'] = {'On': 'DOME.inv_power_lens_heater=0', 'Off': 'DOME.inv_power_lens_heater=1'};
-            commands['WF0'] = {'Cooling ON': 'WF0.CCD_SET=-20', 'Cooling OFF': 'WF0.CCD_SET=50', 'On': 'DOME.inv_power_CCD=0', 'Off': 'DOME.inv_power_CCD=1'};
-            commands['WF1'] = {'Cooling ON': 'WF1.CCD_SET=-20', 'Cooling OFF': 'WF1.CCD_SET=50', 'On': 'DOME.inv_power_CMOS=0', 'Off': 'DOME.inv_power_CMOS=1'};
+            commands['Pi'] = {'On': 'DOME.power_Pi=1', 'Off': 'DOME.power_Pi=0'};
+            commands['Heater'] = {'On': 'DOME.power_lens_heater=1', 'Off': 'DOME.power_lens_heater=0'};
+            commands['WF0'] = {'Cooling ON': 'WF0.CCD_SET=-20', 'Cooling OFF': 'WF0.CCD_SET=50', 'On': 'DOME.power_CCD=1', 'Off': 'DOME.power_CCD=0'};
+            commands['WF1'] = {'Cooling ON': 'WF1.CCD_SET=-20', 'Cooling OFF': 'WF1.CCD_SET=50', 'On': 'DOME.power_CMOS=1', 'Off': 'DOME.power_CMOS=0'};
             commands['F0'] = {'-100': 'F0.FOC_TAR-=100', '-10': 'F0.FOC_TAR-=10', '+10': 'F0.FOC_TAR+=10', '+100': 'F0.FOC_TAR+=100'};
             commands['F1'] = {'-100': 'F1.FOC_TAR-=100', '-10': 'F1.FOC_TAR-=10', '+10': 'F1.FOC_TAR+=10', '+100': 'F1.FOC_TAR+=100'};
         }
