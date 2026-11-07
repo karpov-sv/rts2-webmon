@@ -71,6 +71,85 @@ a:not([href]):not([class]):hover {
     }
 }
 
+/* Subtle button variants (btn-primary-subtle, btn-secondary-subtle, ...): pale
+   background, dark text and tinted border, built from Bootstrap's own subtle
+   theme colors, so they follow dark mode too */
+.btn-primary-subtle, .btn-outline-primary-subtle {
+    --subtle-fg: var(--bs-primary-text-emphasis);
+    --subtle-bg: var(--bs-primary-bg-subtle);
+    --subtle-border: var(--bs-primary-border-subtle);
+    --bs-btn-focus-shadow-rgb: var(--bs-primary-rgb);
+}
+
+.btn-secondary-subtle, .btn-outline-secondary-subtle {
+    --subtle-fg: var(--bs-secondary-text-emphasis);
+    --subtle-bg: var(--bs-secondary-bg-subtle);
+    --subtle-border: var(--bs-secondary-border-subtle);
+    --bs-btn-focus-shadow-rgb: var(--bs-secondary-rgb);
+}
+
+.btn-success-subtle, .btn-outline-success-subtle {
+    --subtle-fg: var(--bs-success-text-emphasis);
+    --subtle-bg: var(--bs-success-bg-subtle);
+    --subtle-border: var(--bs-success-border-subtle);
+    --bs-btn-focus-shadow-rgb: var(--bs-success-rgb);
+}
+
+.btn-danger-subtle, .btn-outline-danger-subtle {
+    --subtle-fg: var(--bs-danger-text-emphasis);
+    --subtle-bg: var(--bs-danger-bg-subtle);
+    --subtle-border: var(--bs-danger-border-subtle);
+    --bs-btn-focus-shadow-rgb: var(--bs-danger-rgb);
+}
+
+.btn-warning-subtle, .btn-outline-warning-subtle {
+    --subtle-fg: var(--bs-warning-text-emphasis);
+    --subtle-bg: var(--bs-warning-bg-subtle);
+    --subtle-border: var(--bs-warning-border-subtle);
+    --bs-btn-focus-shadow-rgb: var(--bs-warning-rgb);
+}
+
+.btn-info-subtle, .btn-outline-info-subtle {
+    --subtle-fg: var(--bs-info-text-emphasis);
+    --subtle-bg: var(--bs-info-bg-subtle);
+    --subtle-border: var(--bs-info-border-subtle);
+    --bs-btn-focus-shadow-rgb: var(--bs-info-rgb);
+}
+
+.btn-primary-subtle, .btn-secondary-subtle, .btn-success-subtle,
+.btn-danger-subtle, .btn-warning-subtle, .btn-info-subtle {
+    --bs-btn-color: var(--subtle-fg);
+    --bs-btn-bg: var(--subtle-bg);
+    --bs-btn-border-color: var(--subtle-border);
+    --bs-btn-hover-color: var(--subtle-fg);
+    --bs-btn-hover-bg: var(--subtle-border);
+    --bs-btn-hover-border-color: var(--subtle-border);
+    --bs-btn-active-color: var(--subtle-fg);
+    --bs-btn-active-bg: var(--subtle-border);
+    --bs-btn-active-border-color: var(--subtle-fg);
+    --bs-btn-disabled-color: var(--subtle-fg);
+    --bs-btn-disabled-bg: var(--subtle-bg);
+    --bs-btn-disabled-border-color: var(--subtle-border);
+}
+
+/* Outline subtle variants (btn-outline-secondary-subtle, ...): transparent with
+   the subtle border, filled with the subtle background on hover */
+.btn-outline-primary-subtle, .btn-outline-secondary-subtle, .btn-outline-success-subtle,
+.btn-outline-danger-subtle, .btn-outline-warning-subtle, .btn-outline-info-subtle {
+    --bs-btn-color: var(--subtle-fg);
+    --bs-btn-bg: transparent;
+    --bs-btn-border-color: var(--subtle-border);
+    --bs-btn-hover-color: var(--subtle-fg);
+    --bs-btn-hover-bg: var(--subtle-bg);
+    --bs-btn-hover-border-color: var(--subtle-border);
+    --bs-btn-active-color: var(--subtle-fg);
+    --bs-btn-active-bg: var(--subtle-border);
+    --bs-btn-active-border-color: var(--subtle-fg);
+    --bs-btn-disabled-color: var(--subtle-fg);
+    --bs-btn-disabled-bg: transparent;
+    --bs-btn-disabled-border-color: var(--subtle-border);
+}
+
 /* Badges sized like Bootstrap 3 labels */
 .badge {
     --bs-badge-padding-y: 0.25em;

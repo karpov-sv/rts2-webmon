@@ -169,7 +169,7 @@ class LogModal extends React.Component {
                                     label={t.charAt(0).toUpperCase() + t.slice(1)}
                                     checked={this.state.checkbox[t]} onChange={evt => this.handleCheckbox(evt, t)}/>)}
                   </span>
-                  <Button variant="outline-secondary" onClick={() => this.setState({show: false})}>Close</Button>
+                  <Button variant="secondary-subtle" onClick={() => this.setState({show: false})}>Close</Button>
                 </Modal.Footer>
               </Modal>
             </>
@@ -268,7 +268,7 @@ class AuthModal extends React.Component {
                     </FormGroup>
                     {this.state.message &&
                      <p className="text-danger text-center">{this.state.message}</p>}
-                    <Button className="w-100" size="lg" variant="outline-secondary" type="submit" disabled={this.state.disabled}>Login</Button>
+                    <Button className="w-100" size="lg" variant="secondary-subtle" type="submit" disabled={this.state.disabled}>Login</Button>
                   </Form>
                 </Modal.Body>
               </Modal>
@@ -334,13 +334,13 @@ class CmdModal extends React.Component {
                 var buttonlist = [];
 
                 for(var ckey in this.props.commands[key]) {
-                    buttonlist.push(<Button key={ckey} variant="outline-secondary" onClick={this.sendCommand.bind(this, this.props.commands[key][ckey])}>{ckey}</Button>);
+                    buttonlist.push(<Button key={ckey} variant="secondary-subtle" onClick={this.sendCommand.bind(this, this.props.commands[key][ckey])}>{ckey}</Button>);
                 }
 
                 cmdlist.push(
                     <span style={{paddingLeft: "1em"}} key={key}>
                       <ButtonGroup className="mb-1">
-                        <Button variant="secondary" disabled>{key}:</Button>
+                        <Button variant="outline-secondary-subtle" disabled>{key}:</Button>
                         {buttonlist}
                       </ButtonGroup>
                     </span>
@@ -374,7 +374,7 @@ class CmdModal extends React.Component {
                     {this.state.message &&
                      <span className={this.state.ret ? "text-danger" : "text-success"}>{this.state.message}</span>}
                   </span>
-                  <Button variant="outline-secondary" onClick={() => this.setState({show: false})}>Close</Button>
+                  <Button variant="secondary-subtle" onClick={() => this.setState({show: false})}>Close</Button>
                 </Modal.Footer>
               </Modal>
             </>
@@ -619,11 +619,11 @@ class ObsModal extends React.Component {
                         value={this.state.night_input}
                         onChange={(evt) => this.handleChange(evt)}
                         placeholder="YYYY-MM-DD"/>
-                      <Button variant="outline-secondary" className="text-nowrap" type="submit">Show Night</Button>
+                      <Button variant="secondary-subtle" className="text-nowrap" type="submit">Show Night</Button>
                     </Form>
                   </span>
 
-                  <Button variant="outline-secondary" onClick={() => this.handleHide()}>Close</Button>
+                  <Button variant="secondary-subtle" onClick={() => this.handleHide()}>Close</Button>
                 </Modal.Footer>
               </Modal>
             </>

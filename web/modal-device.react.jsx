@@ -50,7 +50,7 @@ class DeviceModal extends React.Component {
                   </Table>
                 </Modal.Body>
                 <Modal.Footer>
-                  <Button variant="outline-secondary" onClick={() => this.setState({show: false})}>Close</Button>
+                  <Button variant="secondary-subtle" onClick={() => this.setState({show: false})}>Close</Button>
                 </Modal.Footer>
               </Modal>
             </>
@@ -242,8 +242,8 @@ class DeviceModalExt extends React.Component {
                    {this.state.message_icons.map((d,i) => <span key={i} style={{paddingRight: "0.3em"}}>{d}</span>)}
                      </span></> : null}
 
-                  <Button variant="outline-secondary" onClick={() => this.sendCommand('info')}>Refresh</Button>
-                  <Button variant="outline-secondary" onClick={() => this.handleHide()}>Close</Button>
+                  <Button variant="secondary-subtle" onClick={() => this.sendCommand('info')}>Refresh</Button>
+                  <Button variant="secondary-subtle" onClick={() => this.handleHide()}>Close</Button>
                 </Modal.Footer>
               </Modal>
             </>

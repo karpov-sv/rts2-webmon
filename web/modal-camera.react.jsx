@@ -83,7 +83,7 @@ class CameraModal extends React.Component {
                 <Modal.Footer>
                   <span className="me-auto">
                       <Form className="d-flex gap-1" onSubmit={evt => {this.sendVariable('focpos', this.state.focpos); evt.preventDefault();}}>
-                        <Button variant="outline-secondary" onClick={() => this.sendCommand('expose')}>Expose</Button>
+                        <Button variant="secondary-subtle" onClick={() => this.sendCommand('expose')}>Expose</Button>
                         <FormControl type="text" htmlSize={5}
                                      placeholder="focpos"
                                      value={this.state.focpos}
@@ -91,7 +91,7 @@ class CameraModal extends React.Component {
                     </Form>
                   </span>
 
-                  <Button variant="outline-secondary" onClick={() => this.setState({show: false})}>Close</Button>
+                  <Button variant="secondary-subtle" onClick={() => this.setState({show: false})}>Close</Button>
                 </Modal.Footer>
               </Modal>
             </>

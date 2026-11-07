@@ -508,7 +508,7 @@ class QueueModal extends React.Component {
                       />
 
                         <DropdownButton id="queue-list"  title="Select queue for targets"
-                                        variant="outline-secondary"
+                                        variant="secondary-subtle"
                                         title={this.state.queue ? this.state.queue : "Queue"}
                                         onSelect={(selected) => {this.setState({queue: selected});}}>
                           {queue_names.map((d,i) => {return <Dropdown.Item eventKey={d} key={i} active={d == this.state.queue}>{d}</Dropdown.Item>;})}
@@ -516,21 +516,21 @@ class QueueModal extends React.Component {
 
                         <Button title="Display target information in a new window"
                                 disabled={!this.state.target_selected || !this.state.target_selected.length}
-                                variant="outline-secondary"
+                                variant="secondary-subtle"
                                 onClick={() => this.handleInfo()}>
                           Info
                         </Button>
 
                         <Button title="Enable target for automatic scheduling"
                                 disabled={!this.state.target_selected || !this.state.target_selected.length}
-                                variant="outline-secondary"
+                                variant="secondary-subtle"
                                 onClick={() => this.handleTargetEnable(this.state.target_selected[0].id)}>
                           Enable
                         </Button>
 
                         <Button title={times_error ? times_error : "Queue selected target"}
                                 disabled={!this.state.target_selected || !this.state.target_selected.length || times_error != null}
-                                variant="outline-secondary"
+                                variant="secondary-subtle"
                                 onClick={() => this.handleQueue()}>
                           Queue
                         </Button>
@@ -588,8 +588,8 @@ class QueueModal extends React.Component {
 
                   {this.state.message ? this.state.message : ""}
 
-                  <Button variant="outline-secondary" onClick={() => this.setState({showNew: !this.state.showNew})}>{this.state.showNew ? "Hide New Target" : "New Target"}</Button>
-                  <Button variant="outline-secondary" onClick={() => this.handleHide()}>Close</Button>
+                  <Button variant="secondary-subtle" onClick={() => this.setState({showNew: !this.state.showNew})}>{this.state.showNew ? "Hide New Target" : "New Target"}</Button>
+                  <Button variant="secondary-subtle" onClick={() => this.handleHide()}>Close</Button>
                 </Modal.Footer>
               </Modal>
             </>
@@ -685,7 +685,7 @@ class NewTarget extends React.Component {
                      {/* <InputGroup.Button> */}
                      {/*   <Button onClick={() => this.props.onClose()}>Close</Button> */}
                      {/* </InputGroup.Button> */}
-                       <Button variant="outline-secondary" onClick={() => this.handleCreate()}>Create</Button>
+                       <Button variant="secondary-subtle" onClick={() => this.handleCreate()}>Create</Button>
                    </InputGroup>
                  </Form>
                </>;
@@ -713,7 +713,7 @@ class ScriptsEdit extends React.Component {
                  <FormGroup className="w-100 mb-1">
                    <InputGroup>
                         <DropdownButton id="camera-list"  title="Select camera"
-                                        variant="outline-secondary"
+                                        variant="secondary-subtle"
                                         title={this.state.camera ? this.state.camera : "Camera"}
                                         onSelect={(selected) => {this.setState({camera: selected, script: scripts[selected][0]});}}>
                           {Object.keys(scripts).map((d,i) => {return <Dropdown.Item eventKey={d} key={i} active={d == this.state.camera}>{d}</Dropdown.Item>;})}
@@ -721,7 +721,7 @@ class ScriptsEdit extends React.Component {
                      <FormControl placeholder='Script' value={this.state.script ? this.state.script : ''}
                                   onChange={(evt) => this.handleChange(evt)}/>
                        <Button title="Update script for selected camera"
-                               variant="outline-secondary"
+                               variant="secondary-subtle"
                                disabled={!this.state.camera}
                                onClick={() => this.handleUpdate()}>
                          Update

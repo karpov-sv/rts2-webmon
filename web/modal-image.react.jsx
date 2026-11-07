@@ -23,7 +23,7 @@ class ImageModal extends React.Component {
                   <img className="img-fluid mx-auto d-block" src={this.state.rsrc} onClick={()=>window.open(this.state.src, '_blank')}/>
                 </Modal.Body>
                 <Modal.Footer>
-                  <Button variant="outline-secondary" onClick={() => this.setState({show: false})}>Close</Button>
+                  <Button variant="secondary-subtle" onClick={() => this.setState({show: false})}>Close</Button>
                 </Modal.Footer>
               </Modal>
             </>
