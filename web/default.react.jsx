@@ -63,11 +63,11 @@ class DefaultClient extends React.Component {
             if (status['centrald'].connected)
                 night_info = (
                     <div className="small text-muted" style={{padding: "5px"}}>
-                      Night start <span className="text-info"><UnixTime time={status['centrald'].d.night_beginning}/></span> end <span className="text-info"><UnixTime time={status['centrald'].d.night_ending}/></span>.
+                      Night start <span className="text-info-emphasis"><UnixTime time={status['centrald'].d.night_beginning}/></span> end <span className="text-info-emphasis"><UnixTime time={status['centrald'].d.night_ending}/></span>.
 
-                      Moon rise <span className="text-info"><UnixTime time={status['centrald'].d.moon_rise}/></span> set <span className="text-info"><UnixTime time={status['centrald'].d.moon_set}/></span>.
+                      Moon rise <span className="text-info-emphasis"><UnixTime time={status['centrald'].d.moon_rise}/></span> set <span className="text-info-emphasis"><UnixTime time={status['centrald'].d.moon_set}/></span>.
 
-                      Lunar phase <span className="text-info">{status['centrald'].d.lunar_phase.toFixed(1)}</span> deg, limb <span className="text-info">{status['centrald'].d.lunar_limb.toFixed(1)}</span> deg, altitude <span className="text-info">{status['centrald'].d.moon_alt.toFixed(1)}</span> deg
+                      Lunar phase <span className="text-info-emphasis">{status['centrald'].d.lunar_phase.toFixed(1)}</span> deg, limb <span className="text-info-emphasis">{status['centrald'].d.lunar_limb.toFixed(1)}</span> deg, altitude <span className="text-info-emphasis">{status['centrald'].d.moon_alt.toFixed(1)}</span> deg
                     </div>
                 );
 
@@ -77,7 +77,7 @@ class DefaultClient extends React.Component {
                 var type = status[name].type;
 
                 var dev_name = name;
-                var dev_class = "text-danger bg-danger";
+                var dev_class = "text-danger-emphasis bg-danger-subtle";
                 var dev_body = null;
                 var dev_sub = [];
 
@@ -94,21 +94,21 @@ class DefaultClient extends React.Component {
 
                     // Color coding of states
                     if ((state & 0xf0000) == 0x40000)
-                        dev_class = "text-warning bg-warning";
+                        dev_class = "text-warning-emphasis bg-warning-subtle";
                     else if (state & 0xf0000)
-                        dev_class = "text-danger bg-danger";
+                        dev_class = "text-danger-emphasis bg-danger-subtle";
                     else if (state & 0x80000000)
-                        dev_class = "text-warning bg-warning";
+                        dev_class = "text-warning-emphasis bg-warning-subtle";
                     else if (type == 2 && ((state & 0x07) == 1 || (state & 0x07) == 4))
-                        dev_class = "text-info bg-info";
+                        dev_class = "text-info-emphasis bg-info-subtle";
                     else if (type == 2 && (state & 0x07) == 0 && (state & 0x20) == 0)
-                        dev_class = "text-danger bg-danger";
+                        dev_class = "text-danger-emphasis bg-danger-subtle";
                     else if (type == 3 && (state & 0x03))
-                        dev_class = "text-info bg-info";
+                        dev_class = "text-info-emphasis bg-info-subtle";
                     else if (type == 4 && (state & 0x1a))
-                        dev_class = "text-info bg-info";
+                        dev_class = "text-info-emphasis bg-info-subtle";
                     else if (type == 10 && state)
-                        dev_class = "text-info bg-info";
+                        dev_class = "text-info-emphasis bg-info-subtle";
                     else
                         dev_class = "text-default";
 
@@ -116,13 +116,13 @@ class DefaultClient extends React.Component {
 
                     // centrald
                     if (type == 1 && (state & 0x80000000))
-                        dev_sub.push(<span className="text-warning bg-warning" key="bad_weather">
+                        dev_sub.push(<span className="text-warning-emphasis bg-warning-subtle" key="bad_weather">
                                        bad weather from {vars['bad_weather_device']} : {vars['bad_weather_reason']}
                                      </span>);
 
                     // mount
                     if (type == 2 && ((cstate & 0x0f) != 2 && (cstate & 0x0f) != 3 && (cstate & 0x0f) != 4) && (state & 0x07) != 2)
-                        dev_sub.push(<span className="label label-danger" key="mount_not_parked">
+                        dev_sub.push(<span className="badge text-bg-danger" key="mount_not_parked">
                                        Mount is not parked
                                      </span>);
 
@@ -143,26 +143,26 @@ class DefaultClient extends React.Component {
                             var src = this.props.root + client.name + '/preview/' + vars.last_preview_image + '?ps=128&lb=&time=' + vars.last_preview_time;
                             var title = <>Image on {name} at <UnixTime time={vars.last_preview_time}/></>;
 
-                            dev_body = <>{dev_body}<span className="pull-right"><CameraModal name={name} client={client} activator={<span className="glyphicon glyphicon-picture icon" title="Latest image"/>} variables={vars}/></span></>;
+                            dev_body = <>{dev_body}<span className="float-end"><CameraModal name={name} client={client} activator={<span className="bi bi-image-fill icon" title="Latest image"/>} variables={vars}/></span></>;
                         }
                     }
 
                     // next-good-weather
                     if (vars['next_good_weather'] && vars['next_good_weather'] > now())
-                        dev_sub.push(<span className="text-warning bg-warning">
+                        dev_sub.push(<span className="text-warning-emphasis bg-warning-subtle">
                                        next good weather: <UnixTime time={vars['next_good_weather']}/>
                                      </span>);
 
                     // next-open
                     if (vars['next_open'] && vars['next_open'] > now())
-                        dev_sub.push(<span className="text-warning bg-warning">
+                        dev_sub.push(<span className="text-warning-emphasis bg-warning-subtle">
                                        next open: <UnixTime time={vars['next_open']}/>
                                      </span>);
 
                     // imgproc
                     if (type == 21) {
                         if (vars['free_diskspace'] && vars['free_diskspace']/1024/1024/1024 < 10)
-                            dev_sub.push(<span className="label label-danger">Low disk space: {(vars['free_diskspace']/1024/1024/1024).toFixed(1)} Gb</span>);
+                            dev_sub.push(<span className="badge text-bg-danger">Low disk space: {(vars['free_diskspace']/1024/1024/1024).toFixed(1)} Gb</span>);
 
                     }
 
@@ -175,7 +175,7 @@ class DefaultClient extends React.Component {
                             for (var ti = 0; ti < vars[queue+'_ids'].length; ti++){
                                 var title = unixtime(vars[queue+'_start'][ti]) + " - " + unixtime(vars[queue+'_end'][ti]);
 
-                                targets.push(<span className="label label-info" key={ti} title={title} style={{margin: "0.2em"}}>{vars[queue+'_ids'][ti] + ' / ' + vars[queue+'_names'][ti]}</span>);
+                                targets.push(<span className="badge text-bg-info" key={ti} title={title} style={{margin: "0.2em"}}>{vars[queue+'_ids'][ti] + ' / ' + vars[queue+'_names'][ti]}</span>);
                             }
 
                             if (targets.length)
@@ -208,14 +208,14 @@ class DefaultClient extends React.Component {
         // Construct the component
         return (
             <div>
-              <Panel expanded={client.connected}>
-                <Panel.Heading>
-                  <Panel.Title componentClass='h3'>
+              <Card>
+                <Card.Header>
+                  <Card.Title as="h3" className="mb-0">
                     {client.description}
                     <span style={{marginLeft:"0.5em"}}/>
                     {head_status}
                     {this.props.auth &&
-                     <span className="pull-right">
+                     <span className="float-end">
                        <LogModal client={client} />
 
                        <span style={{marginLeft:"0.5em"}}/>
@@ -228,16 +228,18 @@ class DefaultClient extends React.Component {
 
                        <span style={{marginLeft:"0.5em"}}/>
 
-                       <span className="glyphicon glyphicon-picture icon" onClick={()=>window.open(this.props.root + client.name + '/preview/', '_blank')} title="Image Previews"/>
+                       <span className="bi bi-image-fill icon" onClick={()=>window.open(this.props.root + client.name + '/preview/', '_blank')} title="Image Previews"/>
 
                        <span style={{marginLeft:"0.5em"}}/>
 
                        <CmdModal client={client} commands={commands}/>
                      </span>
                     }
-                  </Panel.Title>
-                </Panel.Heading>
-                <Panel.Body collapsible style={{padding: "5px", margin: "1px"}}>
+                  </Card.Title>
+                </Card.Header>
+                <Collapse in={client.connected}>
+                <div>
+                <Card.Body style={{padding: "5px", margin: "1px"}}>
                   <div className={body_class}>
                     {night_info}
                     <Row>
@@ -258,8 +260,10 @@ class DefaultClient extends React.Component {
                       </Col>
                     </Row>
                   </div>
-                </Panel.Body>
-              </Panel>
+                </Card.Body>
+                </div>
+                </Collapse>
+              </Card>
            </div>
         );
     }

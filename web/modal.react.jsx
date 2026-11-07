@@ -123,7 +123,7 @@ class LogModal extends React.Component {
                    (type == 'W' && this.state.checkbox.warning) ||
                    (type == 'E' && this.state.checkbox.error) ||
                    (type == 'D' && this.state.checkbox.debug))
-                    list.push(<tr key={i} className={ctype}><td nowrap={1} style={style}>{unixtime(msg[0], false)}</td><td style={style}>{msg[1]}</td><td style={style}>{type}</td><td nowrap={1} style={style}>{msg[3]}</td></tr>);
+                    list.push(<tr key={i} className={ctype != "default" ? "table-" + ctype : null}><td nowrap={1} style={style}>{unixtime(msg[0], false)}</td><td style={style}>{msg[1]}</td><td style={style}>{type}</td><td nowrap={1} style={style}>{msg[3]}</td></tr>);
             }
 
         if(this.messages_end.current && this.modal_body.current &&
@@ -139,11 +139,11 @@ class LogModal extends React.Component {
                </span>
               }
               {!this.props.activator &&
-               <span className="glyphicon glyphicon-console icon" onClick={() => this.handleShow()} title="Messages Log + Command Line"/>
+               <span className="bi bi-terminal icon" onClick={() => this.handleShow()} title="Messages Log + Command Line"/>
               }
 
               {/* Modal window */}
-              <Modal bsSize="lg" show={this.state.show} onHide={() => this.setState({show: false})} onEntered={() => this.scrollToBottom()}>
+              <Modal size="lg" show={this.state.show} onHide={() => this.setState({show: false})} onEntered={() => this.scrollToBottom()}>
                 <Modal.Header closeButton>
                   <Modal.Title>{this.props.title ? this.props.title : "Messages Log : " + this.props.client.description}</Modal.Title>
                 </Modal.Header>
@@ -163,11 +163,13 @@ class LogModal extends React.Component {
                   <CmdLine client={this.props.client} onComplete={() => this.requestState()}/>
                 </div>
                 <Modal.Footer>
-                  <Checkbox onChange={evt => this.handleCheckbox(evt, "info")} inline={1} className="pull-left" checked={this.state.checkbox.info}>Info</Checkbox>
-                  <Checkbox onChange={evt => this.handleCheckbox(evt, "warning")} inline={1} className="pull-left" checked={this.state.checkbox.warning}>Warning</Checkbox>
-                  <Checkbox onChange={evt => this.handleCheckbox(evt, "error")} inline={1} className="pull-left" checked={this.state.checkbox.error}>Error</Checkbox>
-                  <Checkbox onChange={evt => this.handleCheckbox(evt, "debug")} inline={1} className="pull-left" checked={this.state.checkbox.debug}>Debug</Checkbox>
-                  <Button bsStyle="default" onClick={() => this.setState({show: false})}>Close</Button>
+                  <span className="me-auto">
+                    {['info', 'warning', 'error', 'debug'].map((t) =>
+                        <Form.Check inline type="checkbox" key={t} id={"log_" + t + "_" + this.props.client.name}
+                                    label={t.charAt(0).toUpperCase() + t.slice(1)}
+                                    checked={this.state.checkbox[t]} onChange={evt => this.handleCheckbox(evt, t)}/>)}
+                  </span>
+                  <Button variant="outline-secondary" onClick={() => this.setState({show: false})}>Close</Button>
                 </Modal.Footer>
               </Modal>
             </>
@@ -243,30 +245,30 @@ class AuthModal extends React.Component {
               {!this.props.activator && this.props.auth &&
                <>
                  Logged in as <strong>{this.props.username}</strong>.
-                 <a onClick={() => this.handleLogout()}><span className="glyphicon glyphicon-log-out icon"/> Log out</a>
+                 <a onClick={() => this.handleLogout()}><span className="bi bi-box-arrow-right icon"/> Log out</a>
                </>}
               {!this.props.activator && !this.props.auth &&
-               <a onClick={() => this.handleShow()}><span className="glyphicon glyphicon-log-in icon"/> Log in</a>
+               <a onClick={() => this.handleShow()}><span className="bi bi-box-arrow-in-right icon"/> Log in</a>
               }
 
               {/* Modal window */}
-              <Modal bsSize="sm" show={this.state.show} onHide={() => this.setState({show: false})}>
+              <Modal size="sm" show={this.state.show} onHide={() => this.setState({show: false})}>
                 <Modal.Header closeButton>
                   <Modal.Title>Authentication</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                   <Form onSubmit={evt => this.handleSubmit(evt)}>
-                    <FormGroup controlId="username" bsSize="large">
-                      <ControlLabel>Username</ControlLabel>
+                    <FormGroup controlId="username" className="mb-3">
+                      <Form.Label>Username</Form.Label>
                       <FormControl autoFocus type="text" value={this.state.username} onChange={(evt) => this.handleChange(evt)}/>
                     </FormGroup>
-                    <FormGroup controlId="password" bsSize="large">
-                      <ControlLabel>Password</ControlLabel>
+                    <FormGroup controlId="password" className="mb-3">
+                      <Form.Label>Password</Form.Label>
                       <FormControl value={this.state.password} type="password" onChange={(evt) => this.handleChange(evt)}/>
                     </FormGroup>
                     {this.state.message &&
                      <p className="text-danger text-center">{this.state.message}</p>}
-                    <Button block bsSize="large" type="submit" disabled={this.state.disabled}>Login</Button>
+                    <Button className="w-100" size="lg" variant="outline-secondary" type="submit" disabled={this.state.disabled}>Login</Button>
                   </Form>
                 </Modal.Body>
               </Modal>
@@ -332,13 +334,13 @@ class CmdModal extends React.Component {
                 var buttonlist = [];
 
                 for(var ckey in this.props.commands[key]) {
-                    buttonlist.push(<Button key={ckey} onClick={this.sendCommand.bind(this, this.props.commands[key][ckey])}>{ckey}</Button>);
+                    buttonlist.push(<Button key={ckey} variant="outline-secondary" onClick={this.sendCommand.bind(this, this.props.commands[key][ckey])}>{ckey}</Button>);
                 }
 
                 cmdlist.push(
                     <span style={{paddingLeft: "1em"}} key={key}>
-                      <ButtonGroup>
-                        <Button disabled>{key}:</Button>
+                      <ButtonGroup className="mb-1">
+                        <Button variant="secondary" disabled>{key}:</Button>
                         {buttonlist}
                       </ButtonGroup>
                     </span>
@@ -354,11 +356,11 @@ class CmdModal extends React.Component {
                  {this.props.activator}
                </span>}
               {!this.props.activator && this.props.auth &&
-               <span className="glyphicon glyphicon-cog icon" onClick={() => this.handleShow()} title="Quick Commands"/>
+               <span className="bi bi-gear-fill icon" onClick={() => this.handleShow()} title="Quick Commands"/>
               }
 
               {/* Modal window */}
-              <Modal bsSize="lg" show={this.state.show} onHide={() => this.setState({show: false})}>
+              <Modal size="lg" show={this.state.show} onHide={() => this.setState({show: false})}>
                 <Modal.Header closeButton>
                   <Modal.Title>Quick Commands : {this.props.client.description}</Modal.Title>
                 </Modal.Header>
@@ -368,11 +370,11 @@ class CmdModal extends React.Component {
 
                 </Modal.Body>
                 <Modal.Footer>
-                  <span className="pull-left">
+                  <span className="me-auto">
                     {this.state.message &&
                      <span className={this.state.ret ? "text-danger" : "text-success"}>{this.state.message}</span>}
                   </span>
-                  <Button bsStyle="default" onClick={() => this.setState({show: false})}>Close</Button>
+                  <Button variant="outline-secondary" onClick={() => this.setState({show: false})}>Close</Button>
                 </Modal.Footer>
               </Modal>
             </>
@@ -586,11 +588,11 @@ class ObsModal extends React.Component {
                </span>
               }
               {!this.props.activator &&
-               <span className="glyphicon glyphicon-list icon" onClick={() => this.handleShow()} title="List of Observations"/>
+               <span className="bi bi-list-ul icon" onClick={() => this.handleShow()} title="List of Observations"/>
               }
 
               {/* Modal window */}
-              <Modal bsSize="lg" show={this.state.show} onHide={() => this.handleHide()} onEntered={() => this.scrollToBottom()}>
+              <Modal size="lg" show={this.state.show} onHide={() => this.handleHide()} onEntered={() => this.scrollToBottom()}>
                 <Modal.Header closeButton>
                   <Modal.Title>
                     {this.props.title ? this.props.title : "List of Observations : " + this.props.client.description}
@@ -608,21 +610,20 @@ class ObsModal extends React.Component {
                   </Modal.Body>
                 </div>
                 <Modal.Footer>
-                  <span className="pull-left">
+                  <span className="me-auto">
 
-                    <Form inline onSubmit={evt => this.handleSubmit(evt)}>
+                    <Form className="d-flex gap-1" onSubmit={evt => this.handleSubmit(evt)}>
 
                       <FormControl
                         type="text"
                         value={this.state.night_input}
                         onChange={(evt) => this.handleChange(evt)}
                         placeholder="YYYY-MM-DD"/>
-                      {' '}
-                      <Button type="submit">Show Night</Button>
+                      <Button variant="outline-secondary" className="text-nowrap" type="submit">Show Night</Button>
                     </Form>
                   </span>
 
-                  <Button bsStyle="default" onClick={() => this.handleHide()}>Close</Button>
+                  <Button variant="outline-secondary" onClick={() => this.handleHide()}>Close</Button>
                 </Modal.Footer>
               </Modal>
             </>

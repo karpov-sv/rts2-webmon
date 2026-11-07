@@ -188,7 +188,7 @@ class QueueModal extends React.Component {
     }
 
     message(text, ctype="text-default") {
-        var msg = text ? <span className={"pull-left " + ctype}>{text}</span> : null;
+        var msg = text ? <span className={"me-auto " + ctype}>{text}</span> : null;
 
         this.setState({message: msg});
     }
@@ -219,7 +219,7 @@ class QueueModal extends React.Component {
             }
         }
 
-        this.message("Target not found: " + id, 'text-warning');
+        this.message("Target not found: " + id, 'text-warning-emphasis');
     }
 
     handleInfo() {
@@ -384,10 +384,10 @@ class QueueModal extends React.Component {
                        <ul className="list-group" style={{padding: "0.1em", margin: "0.1em"}}>
                          {targets.map((d,i) => {
                              return <li className="list-group-item" key={i} style={{padding: "5px 5px"}}>{d}
-                                      <span className="pull-right">
-                                        <span className="glyphicon glyphicon-chevron-up icon" title="Move up" style={{marginLeft:"0.5em"}} onClick={this.handleQueueMove.bind(this, queue, i, i-1)}/>
-                                        <span className="glyphicon glyphicon-chevron-down icon" title="Move down" style={{marginLeft:"0.5em"}} onClick={this.handleQueueMove.bind(this, queue, i, i+1)}/>
-                                        <span className="glyphicon glyphicon-remove icon" title="Remove from queue" style={{marginLeft:"0.5em"}} onClick={this.handleQueueRemove.bind(this, queue, i)}/>
+                                      <span className="float-end">
+                                        <span className="bi bi-chevron-up icon" title="Move up" style={{marginLeft:"0.5em"}} onClick={this.handleQueueMove.bind(this, queue, i, i-1)}/>
+                                        <span className="bi bi-chevron-down icon" title="Move down" style={{marginLeft:"0.5em"}} onClick={this.handleQueueMove.bind(this, queue, i, i+1)}/>
+                                        <span className="bi bi-x-lg icon" title="Remove from queue" style={{marginLeft:"0.5em"}} onClick={this.handleQueueRemove.bind(this, queue, i)}/>
                                       </span>
                                     </li>;})}
                        </ul>
@@ -399,10 +399,10 @@ class QueueModal extends React.Component {
             var stargets = [];
             for (var ti = 0; ti < this.state.selectable.length; ti++){
                 var t = this.state.selectable[ti];
-                var color = "black";
+                var color = "var(--bs-body-color)";
 
                 if (t[7] > now ())
-                    color = "gray";
+                    color = "var(--bs-secondary-color)";
 
                 var item = <span style={{color: color}}>
                              <span style={{minWidth: "5em", marginRight: "1em", display: "inline-block"}}>
@@ -417,7 +417,7 @@ class QueueModal extends React.Component {
 
                                {t[7] > now () &&
                                 <span className="text-right">
-                                  <span className="glyphicon glyphicon-hourglass" style={{marginRight: "0.2em"}}/>
+                                  <span className="bi bi-hourglass-split" style={{marginRight: "0.2em"}}/>
                                   <UnixTime time={t[7]}/>
                                 </span>
                                }
@@ -429,8 +429,8 @@ class QueueModal extends React.Component {
                 <><h3 style={{margin: '0.2em'}} onClick={()=>this.setState({autoOpen: !this.state.autoOpen})}>
                     Automatic selector
                     {this.state.autoOpen ?
-                     <span className="caret rotate-180"/> :
-                     <span className="caret"/>}
+                     <span className="bi bi-caret-up-fill ms-1 fs-6"/> :
+                     <span className="bi bi-caret-down-fill ms-1 fs-6"/>}
                   </h3>
                   <Collapse in={this.state.autoOpen}>
                     <div>
@@ -438,10 +438,10 @@ class QueueModal extends React.Component {
                        <ul className="list-group" style={{padding: "0.1em", margin: "0.1em"}}>
                          {stargets.map((d,i) => {
                              return <li className="list-group-item" key={i} style={{padding: "5px 5px"}}>{d}
-                                      <span className="pull-right">
-                                        <span className="glyphicon glyphicon-ok icon" title="Reset" style={{marginLeft:"0.5em"}} onClick={this.handleTargetRestart.bind(this, this.state.selectable[i][0])}/>
-                                        <span className="glyphicon glyphicon-ban-circle icon" title="Postpone for 1 hour" style={{marginLeft:"0.5em"}} onClick={this.handleTargetPostpone.bind(this, this.state.selectable[i][0], 3600)}/>
-                                        <span className="glyphicon glyphicon-remove icon" title="Disable" style={{marginLeft:"0.5em"}} onClick={this.handleTargetDisable.bind(this, this.state.selectable[i][0])}/>
+                                      <span className="float-end">
+                                        <span className="bi bi-check-lg icon" title="Reset" style={{marginLeft:"0.5em"}} onClick={this.handleTargetRestart.bind(this, this.state.selectable[i][0])}/>
+                                        <span className="bi bi-slash-circle icon" title="Postpone for 1 hour" style={{marginLeft:"0.5em"}} onClick={this.handleTargetPostpone.bind(this, this.state.selectable[i][0], 3600)}/>
+                                        <span className="bi bi-x-lg icon" title="Disable" style={{marginLeft:"0.5em"}} onClick={this.handleTargetDisable.bind(this, this.state.selectable[i][0])}/>
                                       </span>
                                     </li>;})}
                        </ul>
@@ -466,11 +466,11 @@ class QueueModal extends React.Component {
                </span>
               }
               {!this.props.activator &&
-               <span className="glyphicon glyphicon-list-alt icon" onClick={() => this.handleShow()} title="Queues"/>
+               <span className="bi bi-card-list icon" onClick={() => this.handleShow()} title="Queues"/>
               }
 
               {/* Modal window */}
-              <Modal bsSize="lg" show={this.state.show} onHide={() => this.handleHide()}>
+              <Modal size="lg" show={this.state.show} onHide={() => this.handleHide()}>
                 <Modal.Header closeButton>
                   <Modal.Title>{this.props.title ? this.props.title : "Queues : " + this.props.client.description}</Modal.Title>
                 </Modal.Header>
@@ -480,11 +480,9 @@ class QueueModal extends React.Component {
                 </Modal.Body>
 
                 <Modal.Footer>
-                  <FormGroup style={{marginBottom: "5px"}}>
+                  <FormGroup className="w-100 mb-1">
                     <InputGroup>
-                      <InputGroup.Addon className="input-group-prepend">
-                        <span className="input-group-text">Target:</span>
-                      </InputGroup.Addon>
+                      <InputGroup.Text>Target:</InputGroup.Text>
 
                       <Typeahead placeholder="Type ID or name to search for targets"
                                  multiple={false}
@@ -509,52 +507,42 @@ class QueueModal extends React.Component {
                                  options={tlist}
                       />
 
-                      <InputGroup.Button className="input-group-append">
                         <DropdownButton id="queue-list"  title="Select queue for targets"
-                                        componentClass={InputGroup.Button}
+                                        variant="outline-secondary"
                                         title={this.state.queue ? this.state.queue : "Queue"}
                                         onSelect={(selected) => {this.setState({queue: selected});}}>
-                          {queue_names.map((d,i) => {return <MenuItem eventKey={d} key={i} active={d == this.state.queue}>{d}</MenuItem>;})}
+                          {queue_names.map((d,i) => {return <Dropdown.Item eventKey={d} key={i} active={d == this.state.queue}>{d}</Dropdown.Item>;})}
                         </DropdownButton>
-                      </InputGroup.Button>
 
-                      <InputGroup.Button className="input-group-append">
                         <Button title="Display target information in a new window"
                                 disabled={!this.state.target_selected || !this.state.target_selected.length}
-                                className="btn-outline-secondary"
+                                variant="outline-secondary"
                                 onClick={() => this.handleInfo()}>
                           Info
                         </Button>
-                      </InputGroup.Button>
 
-                      <InputGroup.Button className="input-group-append">
                         <Button title="Enable target for automatic scheduling"
                                 disabled={!this.state.target_selected || !this.state.target_selected.length}
-                                className="btn-outline-secondary"
+                                variant="outline-secondary"
                                 onClick={() => this.handleTargetEnable(this.state.target_selected[0].id)}>
                           Enable
                         </Button>
-                      </InputGroup.Button>
 
-                      <InputGroup.Button className="input-group-append">
                         <Button title={times_error ? times_error : "Queue selected target"}
                                 disabled={!this.state.target_selected || !this.state.target_selected.length || times_error != null}
-                                className="btn-outline-secondary"
+                                variant="outline-secondary"
                                 onClick={() => this.handleQueue()}>
                           Queue
                         </Button>
-                      </InputGroup.Button>
                     </InputGroup>
                   </FormGroup>
 
-                  <FormGroup style={{marginBottom: "5px"}}>
-                    <Row  style={{padding: 0, paddingLeft: "15px", paddingRight: "15px"}}>
+                  <FormGroup className="w-100 mb-1">
+                    <Row className="g-0">
 
                       <Col md={6}  style={{padding: 0}}>
                         <InputGroup>
-                          <InputGroup.Addon className="input-group-prepend">
-                            <span className="input-group-text">Start Time:</span>
-                          </InputGroup.Addon>
+                          <InputGroup.Text>Start Time:</InputGroup.Text>
 
                           <ReactDatePicker selected={this.state.time1} onChange={(time, evt)=>this.setState({time1:fix(time, evt)})}
                                            onChangeRaw={(x)=>{var t = parseQueueTime(x.target.value); if(t !== undefined) this.setState({time1: t});}}
@@ -567,15 +555,13 @@ class QueueModal extends React.Component {
 
                       <Col md={6} style={{padding: 0}}>
                         <InputGroup>
-                          <InputGroup.Addon className="input-group-prepend">
-                            <span className="input-group-text">End Time:</span>
-                          </InputGroup.Addon>
+                          <InputGroup.Text>End Time:</InputGroup.Text>
 
                           <ReactDatePicker selected={this.state.time2} onChange={(time, evt)=>this.setState({time2:fix(time, evt)})}
                                            onChangeRaw={(x)=>{var t = parseQueueTime(x.target.value); if(t !== undefined) this.setState({time2: t});}}
                                            placeholderText=" --- " showTimeSelect dateFormat='YYYY-MM-DD HH:mm:ss ZZ'
                                            timeFormat='HH:mm:ss' disabledKeyboardNavigation
-                                           className={"form-control" + (times_error ? " alert-danger" : "")} title={times_error}
+                                           className={"form-control" + (times_error ? " is-invalid bg-danger-subtle text-danger-emphasis" : "")} title={times_error}
                                            popperPlacement="top-end" minDate={this.state.time1 ? this.state.time1.clone() : moment()} />
 
                         </InputGroup>
@@ -602,8 +588,8 @@ class QueueModal extends React.Component {
 
                   {this.state.message ? this.state.message : ""}
 
-                  <Button bsStyle="default" onClick={() => this.setState({showNew: !this.state.showNew})}>{this.state.showNew ? "Hide New Target" : "New Target"}</Button>
-                  <Button bsStyle="default" onClick={() => this.handleHide()}>Close</Button>
+                  <Button variant="outline-secondary" onClick={() => this.setState({showNew: !this.state.showNew})}>{this.state.showNew ? "Hide New Target" : "New Target"}</Button>
+                  <Button variant="outline-secondary" onClick={() => this.handleHide()}>Close</Button>
                 </Modal.Footer>
               </Modal>
             </>
@@ -689,21 +675,17 @@ class NewTarget extends React.Component {
 
     render() {
         return <>
-                 <Form>
+                 <Form className="w-100 mb-1">
                    <InputGroup>
-                     <InputGroup.Addon>New Target:</InputGroup.Addon>
+                     <InputGroup.Text>New Target:</InputGroup.Text>
 
                      <FormControl placeholder="Id" onChange={(e) => this.handleChange(e, "id")} style={{minWidth: "6em"}}/>
-                     <span className="input-group-addon" style={{width: 0, padding: 0}}/>
                      <FormControl placeholder="Name" onChange={(e) => this.handleChange(e, "name")}/>
-                     <span className="input-group-addon" style={{width: 0, padding: 0}}/>
                      <FormControl placeholder="Coordinates or SIMBAD or MPC" onChange={(e) => this.handleChange(e, "coords")}/>
                      {/* <InputGroup.Button> */}
                      {/*   <Button onClick={() => this.props.onClose()}>Close</Button> */}
                      {/* </InputGroup.Button> */}
-                     <InputGroup.Button>
-                       <Button onClick={() => this.handleCreate()}>Create</Button>
-                     </InputGroup.Button>
+                       <Button variant="outline-secondary" onClick={() => this.handleCreate()}>Create</Button>
                    </InputGroup>
                  </Form>
                </>;
@@ -728,26 +710,22 @@ class ScriptsEdit extends React.Component {
         var scripts = this.props.scripts;
 
         return <>
-                 <FormGroup style={{marginBottom: "5px"}}>
+                 <FormGroup className="w-100 mb-1">
                    <InputGroup>
-                      <InputGroup.Button className="input-group-append">
                         <DropdownButton id="camera-list"  title="Select camera"
-                                        componentClass={InputGroup.Button}
+                                        variant="outline-secondary"
                                         title={this.state.camera ? this.state.camera : "Camera"}
                                         onSelect={(selected) => {this.setState({camera: selected, script: scripts[selected][0]});}}>
-                          {Object.keys(scripts).map((d,i) => {return <MenuItem eventKey={d} key={i} active={d == this.state.camera}>{d}</MenuItem>;})}
+                          {Object.keys(scripts).map((d,i) => {return <Dropdown.Item eventKey={d} key={i} active={d == this.state.camera}>{d}</Dropdown.Item>;})}
                         </DropdownButton>
-                      </InputGroup.Button>
                      <FormControl placeholder='Script' value={this.state.script ? this.state.script : ''}
                                   onChange={(evt) => this.handleChange(evt)}/>
-                     <InputGroup.Button className="input-group-append">
                        <Button title="Update script for selected camera"
-                               className="btn-outline-secondary"
+                               variant="outline-secondary"
                                disabled={!this.state.camera}
                                onClick={() => this.handleUpdate()}>
                          Update
                        </Button>
-                     </InputGroup.Button>
                    </InputGroup>
                  </FormGroup>
                </>;

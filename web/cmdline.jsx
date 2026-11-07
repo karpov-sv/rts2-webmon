@@ -122,10 +122,10 @@ class CmdLine extends React.Component {
             <>
               <Form onSubmit={evt => this.handleSubmit(evt)}>
                 <InputGroup>
-                  <InputGroup.Addon>Cmd:</InputGroup.Addon>
+                  <InputGroup.Text>Cmd:</InputGroup.Text>
                   <FormControl id="command" type="text" value={this.state.command} placeholder={placeholder} autoFocus onChange={evt => this.handleChange(evt)} onKeyDown={evt => this.handleKeyPress(evt)} autoComplete='off'/>
-                  <InputGroup.Addon><span className={this.state.ret ? "text-danger" : "text-success"}>{this.state.message}</span></InputGroup.Addon>
-                  <InputGroup.Button><Button onClick={evt => this.handleSubmit(evt)}>Send</Button></InputGroup.Button>
+                  <InputGroup.Text><span className={this.state.ret ? "text-danger" : "text-success"}>{this.state.message}</span></InputGroup.Text>
+                  <Button variant="outline-secondary" onClick={evt => this.handleSubmit(evt)}>Send</Button>
                 </InputGroup>
               </Form>
             </>

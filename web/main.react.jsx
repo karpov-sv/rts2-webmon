@@ -36,15 +36,10 @@ class Monitor extends React.Component {
             <div className={this.state.connected ? null : "disabled-controls"}>
               {contents}
               <div style={{marginBottom: "0.5em"}}>
-                <span className="pull-left">
+                <span className="float-start">
                   <ViewSelector view={this.props.view} onChange={(_)=>this.props.dispatch(globalSetView(_))}/>
                 </span>
-                <span className="pull-left">
-                  {window.location.pathname.includes('dark')
-                   ? <a href={this.props.root}>Night</a>
-                   : <a href={this.props.root + 'dark'}>Day</a>}
-                </span>
-                <span className="pull-right">
+                <span className="float-end">
                   <AuthModal/>
                 </span>
               </div>

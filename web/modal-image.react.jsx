@@ -15,15 +15,15 @@ class ImageModal extends React.Component {
               </span>
 
               {/* Modal window */}
-              <Modal bsSize="lg" show={this.state.show} onHide={() => this.setState({show: false})}>
+              <Modal size="lg" show={this.state.show} onHide={() => this.setState({show: false})}>
                 <Modal.Header closeButton>
                   <Modal.Title>{this.props.title}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                  <img className="img img-responsive center-block" src={this.state.rsrc} onClick={()=>window.open(this.state.src, '_blank')}/>
+                  <img className="img-fluid mx-auto d-block" src={this.state.rsrc} onClick={()=>window.open(this.state.src, '_blank')}/>
                 </Modal.Body>
                 <Modal.Footer>
-                  <Button bsStyle="default" onClick={() => this.setState({show: false})}>Close</Button>
+                  <Button variant="outline-secondary" onClick={() => this.setState({show: false})}>Close</Button>
                 </Modal.Footer>
               </Modal>
             </>

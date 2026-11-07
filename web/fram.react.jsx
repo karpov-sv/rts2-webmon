@@ -76,25 +76,25 @@ class FramClient extends React.Component {
 
                     night_info = (
                         <div className="small text-muted" style={{padding: "5px"}}>
-                          Night start <span className="text-info"><UnixTime time={status['centrald'].d.night_beginning}/></span> end <span className="text-info"><UnixTime time={status['centrald'].d.night_ending}/></span>.
+                          Night start <span className="text-info-emphasis"><UnixTime time={status['centrald'].d.night_beginning}/></span> end <span className="text-info-emphasis"><UnixTime time={status['centrald'].d.night_ending}/></span>.
 
-                          Sun alt <span className="text-info">{parseFloat(status['centrald'].d.sun_alt).toFixed(1)}</span> deg.
+                          Sun alt <span className="text-info-emphasis">{parseFloat(status['centrald'].d.sun_alt).toFixed(1)}</span> deg.
                           &nbsp;
                           <span title={mpopup}>
-                            Moon alt <span className="text-info">{parseFloat(status['centrald'].d.moon_alt).toFixed(1)}</span> deg.
+                            Moon alt <span className="text-info-emphasis">{parseFloat(status['centrald'].d.moon_alt).toFixed(1)}</span> deg.
                           </span>
                         </div>
                     );
                 } else {
                     night_info = (
                         <div className="small text-muted" style={{padding: "5px"}}>
-                          Night start <span className="text-info"><UnixTime time={status['centrald'].d.night_beginning}/></span> end <span className="text-info"><UnixTime time={status['centrald'].d.night_ending}/></span>.
+                          Night start <span className="text-info-emphasis"><UnixTime time={status['centrald'].d.night_beginning}/></span> end <span className="text-info-emphasis"><UnixTime time={status['centrald'].d.night_ending}/></span>.
 
-                          Sun alt <span className="text-info">{parseFloat(status['centrald'].d.sun_alt).toFixed(1)}</span> deg.
+                          Sun alt <span className="text-info-emphasis">{parseFloat(status['centrald'].d.sun_alt).toFixed(1)}</span> deg.
 
-                          Moon rise <span className="text-info"><UnixTime time={status['centrald'].d.moon_rise}/></span> set <span className="text-info"><UnixTime time={status['centrald'].d.moon_set}/></span>,
+                          Moon rise <span className="text-info-emphasis"><UnixTime time={status['centrald'].d.moon_rise}/></span> set <span className="text-info-emphasis"><UnixTime time={status['centrald'].d.moon_set}/></span>,
 
-                          phase <span className="text-info">{parseFloat(status['centrald'].d.lunar_phase).toFixed(1)}</span> deg, limb <span className="text-info">{parseFloat(status['centrald'].d.lunar_limb).toFixed(1)}</span> deg, alt <span className="text-info">{parseFloat(status['centrald'].d.moon_alt).toFixed(1)}</span> deg.
+                          phase <span className="text-info-emphasis">{parseFloat(status['centrald'].d.lunar_phase).toFixed(1)}</span> deg, limb <span className="text-info-emphasis">{parseFloat(status['centrald'].d.lunar_limb).toFixed(1)}</span> deg, alt <span className="text-info-emphasis">{parseFloat(status['centrald'].d.moon_alt).toFixed(1)}</span> deg.
                             </div>
                     );
                 }
@@ -106,7 +106,7 @@ class FramClient extends React.Component {
                 var type = status[name].type;
 
                 var dev_name = name;
-                var dev_class = "text-danger bg-danger";
+                var dev_class = "text-danger-emphasis bg-danger-subtle";
                 var dev_body = null;
                 var dev_sub = [];
 
@@ -144,23 +144,23 @@ class FramClient extends React.Component {
 
                     // Color coding of states
                     if ((state & 0xf0000) == 0x40000)
-                        dev_class = "text-warning bg-warning";
+                        dev_class = "text-warning-emphasis bg-warning-subtle";
                     else if (state & 0xf0000)
-                        dev_class = "text-danger bg-danger";
+                        dev_class = "text-danger-emphasis bg-danger-subtle";
                     else if (state & 0x80000000)
-                        dev_class = "text-warning bg-warning";
+                        dev_class = "text-warning-emphasis bg-warning-subtle";
                     else if (type == 2 && ((state & 0x07) == 1 || (state & 0x07) == 4))
-                        dev_class = "text-info bg-info";
+                        dev_class = "text-info-emphasis bg-info-subtle";
                     else if (type == 2 && state == 0)
-                        dev_class = "text-danger bg-danger";
+                        dev_class = "text-danger-emphasis bg-danger-subtle";
                     else if (type == 3 && (state & 0x03))
-                        dev_class = "text-info bg-info";
+                        dev_class = "text-info-emphasis bg-info-subtle";
                     else if (type == 4 && (vars['emergency']))
-                        dev_class = "text-danger bg-danger";
+                        dev_class = "text-danger-emphasis bg-danger-subtle";
                     else if (type == 4 && (state & 0x1a))
-                        dev_class = "text-info bg-info";
+                        dev_class = "text-info-emphasis bg-info-subtle";
                     else if (type == 10 && state)
-                        dev_class = "text-info bg-info";
+                        dev_class = "text-info-emphasis bg-info-subtle";
                     else
                         dev_class = "text-default";
 
@@ -168,19 +168,19 @@ class FramClient extends React.Component {
 
                     // centrald
                     if (type == 1 && (state & 0x80000000))
-                        dev_sub.push(<span className="text-warning bg-warning" key="bad_weather">
+                        dev_sub.push(<span className="text-warning-emphasis bg-warning-subtle" key="bad_weather">
                                        bad weather from {vars['bad_weather_device']} : {vars['bad_weather_reason']}
                                      </span>);
 
                     // mount
                     if (type == 2) {
                         if (((cstate & 0x0f) != 2 && (cstate & 0x0f) != 3 && (cstate & 0x0f) != 4) && (state & 0x07) != 2)
-                            dev_sub.push(<span className="label label-danger" key="mount_not_parked">
+                            dev_sub.push(<span className="badge text-bg-danger" key="mount_not_parked">
                                          Mount is not parked
                                          </span>);
 
                         if (vars['Gstat'] == '1')
-                            dev_sub.push(<span className="label label-danger" key="mount_stopped">
+                            dev_sub.push(<span className="badge text-bg-danger" key="mount_stopped">
                                          Mount stopped
                                          </span>);
                     }
@@ -202,105 +202,105 @@ class FramClient extends React.Component {
                         // Camera temperature
                         if (//vars['CCD_SET'] && vars['CCD_TEMP'] &&
                             vars['CCD_SET'] < vars['CCD_TEMP']-1)
-                            dev_sub.push(<span className="label label-warning" key="camera_hot">
+                            dev_sub.push(<span className="badge text-bg-warning" key="camera_hot">
                                          Camera not cooled
                                          </span>);
 
                         if (//vars['CCD_SET'] && vars['CCD_AIR'] &&
                             vars['CCD_SET'] < 10 && vars['CCD_AIR'] > 30)
-                            dev_sub.push(<span className="label label-warning" key="camera_air_hot">
+                            dev_sub.push(<span className="badge text-bg-warning" key="camera_air_hot">
                                            Camera electronics is hot: {parseFloat(vars['CCD_AIR']).toFixed(1)} deg
                                          </span>);
 
                         // Latest image previewer
                         if (this.props.auth && vars['last_preview_image'])
-                            dev_body = <>{dev_body}<span className="pull-right"><CameraModal name={name} client={client} activator={<span className="glyphicon glyphicon-picture icon" title="Latest image"/>} variables={vars}/></span></>;
+                            dev_body = <>{dev_body}<span className="float-end"><CameraModal name={name} client={client} activator={<span className="bi bi-image-fill icon" title="Latest image"/>} variables={vars}/></span></>;
                     }
 
                     // dome
                     if (type == 4) {
                         if (!(vars['sw_open_left']) && (state & 0x06))
-                            dev_sub.push(<span className="label label-warning" key="sw_open_left">
+                            dev_sub.push(<span className="badge text-bg-warning" key="sw_open_left">
                                            Left open switch is off
                                          </span>);
 
                         if (!(vars['sw_open_right']) && (state & 0x06))
-                            dev_sub.push(<span className="label label-warning" key="sw_open_right">
+                            dev_sub.push(<span className="badge text-bg-warning" key="sw_open_right">
                                            Right open switch is off
                                          </span>);
 
                         if (!(vars['sw_close_left']) && !(state & 0x06))
-                            dev_sub.push(<span className="label label-warning" key="sw_open_left">
+                            dev_sub.push(<span className="badge text-bg-warning" key="sw_open_left">
                                            Left close switch is off
                                          </span>);
 
                         if (!(vars['sw_close_right']) && !(state & 0x06))
-                            dev_sub.push(<span className="label label-warning" key="sw_open_right">
+                            dev_sub.push(<span className="badge text-bg-warning" key="sw_open_right">
                                            Right close switch is off
                                          </span>);
 
                         if (vars['12V'] == 0 || vars['12VDC'] == 0)
-                            dev_sub.push(<span className="label label-danger" key="12v_off">
+                            dev_sub.push(<span className="badge text-bg-danger" key="12v_off">
                                            12V is off
                                          </span>);
                         if ((vars['48V'] == 0 || vars['48VDC'] == 0) && (client.name == 'cta-s0' || client.name == 'cta-s1'))
-                            dev_sub.push(<span className="label label-danger" key="48v_off">
+                            dev_sub.push(<span className="badge text-bg-danger" key="48v_off">
                                            48V is off
                                          </span>);
 
                         if (client.name == 'auger2') {
                             if (vars['power_CCD'] == 0)
-                                dev_sub.push(<span className="label label-danger" key="ccd_off">
+                                dev_sub.push(<span className="badge text-bg-danger" key="ccd_off">
                                                  CCD is off
                                              </span>);
                             if (vars['power_CMOS'] == 0)
-                                dev_sub.push(<span className="label label-danger" key="cmos_off">
+                                dev_sub.push(<span className="badge text-bg-danger" key="cmos_off">
                                                  CMOS is off
                                              </span>);
                             if (vars['power_Pi'] == 0)
-                                dev_sub.push(<span className="label label-danger" key="pi_off">
+                                dev_sub.push(<span className="badge text-bg-danger" key="pi_off">
                                                  Pi is off
                                              </span>);
                             if (vars['power_mount'] == 0)
-                                dev_sub.push(<span className="label label-danger" key="mount_off">
+                                dev_sub.push(<span className="badge text-bg-danger" key="mount_off">
                                                  Mount is off
                                              </span>);
                             if (!vars['oil_level_ok'])
-                                dev_sub.push(<span className="label label-danger" key="low_oil">
+                                dev_sub.push(<span className="badge text-bg-danger" key="low_oil">
                                                  Low oil
                                              </span>);
                             if (!vars['accum_ok'])
-                                dev_sub.push(<span className="label label-danger" key="accum_low">
+                                dev_sub.push(<span className="badge text-bg-danger" key="accum_low">
                                                  Accumulator Pressure Low
                                              </span>);
                             if (vars['motor_is_on'])
-                                dev_sub.push(<span className="label label-info" key="motor_is_on">
+                                dev_sub.push(<span className="badge text-bg-info" key="motor_is_on">
                                                  Motor is ON
                                              </span>);
                         }
 
                         if (vars['mount_is_on'] == 0 && (client.name == 'cta-n' || client.name == 'auger' || client.name == 'auger2'))
-                            dev_sub.push(<span className="label label-danger" key="mount_off">
+                            dev_sub.push(<span className="badge text-bg-danger" key="mount_off">
                                            Mount is off
                                          </span>);
                         if (vars['emergency'])
-                            dev_sub.push(<span className="label label-danger" key="emergency">
+                            dev_sub.push(<span className="badge text-bg-danger" key="emergency">
                                            Emergency
                                          </span>);
                         if (vars['timeout_occured'])
-                            dev_sub.push(<span className="label label-danger" key="timeout">
+                            dev_sub.push(<span className="badge text-bg-danger" key="timeout">
                                            Timeout
                                          </span>);
                         if (vars['on_battery'])
-                            dev_sub.push(<span className="label label-danger" key="on_battery">
+                            dev_sub.push(<span className="badge text-bg-danger" key="on_battery">
                                            On Battery
                                          </span>);
                         if (vars['battery_low'])
-                            dev_sub.push(<span className="label label-danger" key="battery_low">
+                            dev_sub.push(<span className="badge text-bg-danger" key="battery_low">
                                            Battery Low
                                          </span>);
                         if (vars['low_oil'])
-                            dev_sub.push(<span className="label label-danger" key="low_oil">
+                            dev_sub.push(<span className="badge text-bg-danger" key="low_oil">
                                            Low oil
                                          </span>);
                     }
@@ -357,56 +357,56 @@ class FramClient extends React.Component {
 
                     // next-good-weather
                     if (vars['next_good_weather'] && vars['next_good_weather'] > now())
-                        dev_sub.push(<span className="text-warning bg-warning">
+                        dev_sub.push(<span className="text-warning-emphasis bg-warning-subtle">
                                        next good weather: <UnixTime time={vars['next_good_weather']}/>
                                      </span>);
 
                     // next-open
                     if (vars['next_open'] && vars['next_open'] > now())
-                        dev_sub.push(<span className="text-warning bg-warning">
+                        dev_sub.push(<span className="text-warning-emphasis bg-warning-subtle">
                                        next open: <UnixTime time={vars['next_open']}/>
                                      </span>);
 
                     // grbd
                     if (type == 9) {
                         if (vars['last_packet'] && vars['last_packet'] < now() - 1800)
-                            dev_sub.push(<span className="label label-warning">Last packet at <UnixTime time={vars['last_packet']}/></span>);
+                            dev_sub.push(<span className="badge text-bg-warning">Last packet at <UnixTime time={vars['last_packet']}/></span>);
                         if (!vars['last_packet'])
-                            dev_sub.push(<span className="label label-warning">No GCN connection yet</span>);
+                            dev_sub.push(<span className="badge text-bg-warning">No GCN connection yet</span>);
                         if (vars['last_target_time'] && vars['last_target_time'] > now() - 0.5*3600)
-                            dev_sub.push(<span className="text-warning">Last target: {vars['last_target']} / <a href={this.props.root + client.name + '/targets/'+ vars['last_target_id']} target="_blank">{vars['last_target_id']}</a> at <UnixTime time={vars['last_target_time']}/></span>);
+                            dev_sub.push(<span className="text-warning-emphasis">Last target: {vars['last_target']} / <a href={this.props.root + client.name + '/targets/'+ vars['last_target_id']} target="_blank">{vars['last_target_id']}</a> at <UnixTime time={vars['last_target_time']}/></span>);
                         else if (vars['last_target_time'] && vars['last_target_time'] > now() - 6*3600)
                             dev_sub.push(<span className="text-default">Last target: {vars['last_target']} / <a href={this.props.root + client.name + '/targets/'+ vars['last_target_id']} target="_blank">{vars['last_target_id']}</a> at <UnixTime time={vars['last_target_time']}/></span>);
 
                         if (vars['battery.charge'] && vars['battery.charge'] != 100)
-                            dev_sub.push(<span className="label label-danger">Battery {vars['battery.charge']} % : {vars['ups.status']}</span>);
+                            dev_sub.push(<span className="badge text-bg-danger">Battery {vars['battery.charge']} % : {vars['ups.status']}</span>);
 
                     }
 
                     // executor
                     if (type == 20) {
                         if (vars['ignore_day'])
-                            dev_sub.push(<span className="label label-warning">Ignoring day</span>);
+                            dev_sub.push(<span className="badge text-bg-warning">Ignoring day</span>);
                         if (vars['PI'].indexOf('magic') !== -1)
-                            dev_sub.push(<span className="label label-success">MAGIC follow-up active</span>);
+                            dev_sub.push(<span className="badge text-bg-success">MAGIC follow-up active</span>);
                         // MAGIC preview
                         if (this.props.auth && client.name == 'cta-n' && vars['PI'].indexOf('magic') !== -1)
-                            dev_body = <>{dev_body}<span className="pull-right"><ImageModal title={'Latest VAOD map'} src={this.props.root + client.name + '/jpeg//home/adarith/www/out.png'} activator={<span className="glyphicon glyphicon-picture icon" title="Latest VAOD map"/>} refresh={20000}/></span></>;
+                            dev_body = <>{dev_body}<span className="float-end"><ImageModal title={'Latest VAOD map'} src={this.props.root + client.name + '/jpeg//home/adarith/www/out.png'} activator={<span className="bi bi-image-fill icon" title="Latest VAOD map"/>} refresh={20000}/></span></>;
                     }
 
                     // imgproc
                     if (type == 21) {
                         if (!vars['apply_corrections'])
-                            dev_sub.push(<span className="label label-warning">Astrometric corrections disabled</span>);
+                            dev_sub.push(<span className="badge text-bg-warning">Astrometric corrections disabled</span>);
                         if (vars['free_diskspace'] && vars['free_diskspace']/1024/1024/1024 < 60)
-                            dev_sub.push(<span className="label label-danger">Low disk space: {parseFloat((vars['free_diskspace'])/1024/1024/1024).toFixed(1)} Gb</span>);
+                            dev_sub.push(<span className="badge text-bg-danger">Low disk space: {parseFloat((vars['free_diskspace'])/1024/1024/1024).toFixed(1)} Gb</span>);
 
                     }
 
                     // selector
                     if (type == 22) {
                         if (vars['ignore_day'])
-                            dev_sub.push(<span className="label label-warning">Ignoring day</span>);
+                            dev_sub.push(<span className="badge text-bg-warning">Ignoring day</span>);
 
                         if (vars['queue_names'])
                             for (var qi = 0; qi < vars['queue_names'].length; qi++){
@@ -422,7 +422,7 @@ class FramClient extends React.Component {
                                     else if (vars['next_id'] == vars[queue+'_ids'][ti])
                                         ttype = 'warning';
 
-                                    targets.push(<span className={"label label-"+ttype} key={ti} title={title} style={{margin: "0.0em"}}>{vars[queue+'_ids'][ti] + ' / ' + vars[queue+'_names'][ti]}</span>);
+                                    targets.push(<span className={"badge text-bg-"+ttype} key={ti} title={title} style={{margin: "0.0em"}}>{vars[queue+'_ids'][ti] + ' / ' + vars[queue+'_names'][ti]}</span>);
                                 }
 
                                 if (targets.length)
@@ -441,7 +441,7 @@ class FramClient extends React.Component {
                     // UPS
                     if (name == 'UPS') {
                         if (vars['battery.charge'] && vars['battery.charge'] < 100)
-                            dev_sub.push(<span className="label label-danger">Battery {vars['battery.charge']} % : {vars['ups.status']}</span>);
+                            dev_sub.push(<span className="badge text-bg-danger">Battery {vars['battery.charge']} % : {vars['ups.status']}</span>);
                     }
                 } else {
                     dev_body = <span class="text-danger">disconnected since <UnixTime time={status[name].last_status}/></span>;
@@ -520,14 +520,14 @@ class FramClient extends React.Component {
         if (this.props.view == 'compact')
             pstyle['margin'] = '1px';
         var panel =
-            <Panel expanded={client.connected} style={pstyle}>
-              <Panel.Heading>
-                <Panel.Title componentClass='h3'>
+            <Card style={pstyle}>
+              <Card.Header>
+                <Card.Title as="h3" className="mb-0">
                   {client.description}
                   <span style={{marginLeft:"0.5em"}}/>
                   {head_status}
                   {client.connected && this.props.auth &&
-                   <span className="pull-right">
+                   <span className="float-end">
                      <LogModal client={client} />
 
                      <span style={{marginLeft:"0.5em"}}/>
@@ -540,16 +540,18 @@ class FramClient extends React.Component {
 
                      <span style={{marginLeft:"0.5em"}}/>
 
-                     <span className="glyphicon glyphicon-picture icon" onClick={()=>window.open(this.props.root + client.name + '/preview/', '_blank')} title="Image Previews"/>
+                     <span className="bi bi-image-fill icon" onClick={()=>window.open(this.props.root + client.name + '/preview/', '_blank')} title="Image Previews"/>
 
                      <span style={{marginLeft:"0.5em"}}/>
 
                      <CmdModal client={client} commands={commands}/>
                    </span>
                   }
-                </Panel.Title>
-              </Panel.Heading>
-              <Panel.Body collapsible style={{padding: "5px", margin: "1px"}}>
+                </Card.Title>
+              </Card.Header>
+              <Collapse in={client.connected}>
+              <div>
+              <Card.Body style={{padding: "5px", margin: "1px"}}>
                 <div className={body_class}>
                   {night_info}
                   <Row>
@@ -570,8 +572,10 @@ class FramClient extends React.Component {
                     </Col>
                   </Row>
                 </div>
-              </Panel.Body>
-            </Panel>;
+              </Card.Body>
+              </div>
+              </Collapse>
+            </Card>;
 
         return <>
                  {this.props.view == 'full'

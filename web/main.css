@@ -1,9 +1,93 @@
-.throbber {
-    opacity: 0.1;
+/* Keep the dense Bootstrap 3 metrics (14px text, 20px lines): Bootstrap 5 sizes
+   everything in rem, so scaling the root font scales spacing and components too */
+html {
+    font-size: 14px;
 }
 
-.glyphicon.glyphicon-dot:before {
-    content: "\25cf";
+:root {
+    --bs-body-line-height: 1.428571;
+}
+
+/* Heading sizes of Bootstrap 3, fixed instead of growing with the window width.
+   Dialog titles use the .h4 class, so they get the 18px of Bootstrap 3 too */
+h1, .h1, h2, .h2, h3, .h3, h4, .h4, h5, .h5, h6, .h6 {
+    line-height: 1.1;
+}
+
+h1, .h1 { font-size: 36px; }
+h2, .h2 { font-size: 30px; }
+h3, .h3 { font-size: 24px; }
+h4, .h4 { font-size: 18px; }
+h5, .h5 { font-size: 14px; }
+h6, .h6 { font-size: 12px; }
+
+.modal-title {
+    line-height: 1.428571;
+}
+
+/* Links as in Bootstrap 3: underlined on hover only */
+a {
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Bootstrap 5 renders <a> without href as plain text; the app uses those as
+   onClick links (view selector, log in/out), so style them as links again */
+a:not([href]):not([class]) {
+    color: rgba(var(--bs-link-color-rgb), 1);
+    cursor: pointer;
+}
+
+a:not([href]):not([class]):hover {
+    color: rgba(var(--bs-link-hover-color-rgb), 1);
+    text-decoration: underline;
+}
+
+/* Client cards: header metrics of the Bootstrap 3 panels */
+.card {
+    --bs-card-cap-padding-y: 10px;
+    --bs-card-cap-padding-x: 15px;
+    margin-bottom: 20px;
+}
+
+.card-header .card-title {
+    font-size: 16px;
+    line-height: 1.1;
+}
+
+/* Dialog widths of Bootstrap 3 (Bootstrap 5 uses 500px and 800px for lg) */
+@media (min-width: 576px) {
+    .modal {
+        --bs-modal-width: 600px;
+    }
+}
+
+@media (min-width: 992px) {
+    .modal-lg {
+        --bs-modal-width: 900px;
+    }
+}
+
+/* Badges sized like Bootstrap 3 labels */
+.badge {
+    --bs-badge-padding-y: 0.25em;
+    --bs-badge-padding-x: 0.6em;
+}
+
+.card-header .icon {
+    font-size: 16px;
+}
+
+/* Bootstrap Icons are thin outlines, Glyphicons were solid: thicken them a bit */
+.bi::before {
+    -webkit-text-stroke: 0.6px currentColor;
+}
+
+.throbber {
+    opacity: 0.1;
 }
 
 .disabled-controls {
@@ -17,11 +101,11 @@
 }
 
 .icon  {
-    color: gray;
+    color: var(--bs-secondary-color);
 }
 
 .icon:hover {
-  color: black;
+  color: var(--bs-emphasis-color);
 }
 
 .rotate-90 {

@@ -1,6 +1,6 @@
 class Label extends React.Component {
     render() {
-        return (<><span className={"label label-" + this.props.className} style={this.props.style} title={this.props.title}>{this.props.children}</span> </>);
+        return (<><span className={"badge text-bg-" + this.props.className} style={this.props.style} title={this.props.title}>{this.props.children}</span> </>);
     }
 }
 
@@ -10,7 +10,7 @@ class Link extends React.Component {
     render() {
         return (
             <a href={this.props.url} title={this.props.title} style={{padding: "0.2em"}} target="_blank">
-              <span className="glyphicon glyphicon-link"></span>
+              <span className="bi bi-link-45deg"></span>
               {this.props.name}
             </a>
         );
@@ -60,20 +60,20 @@ class ImageRefresh extends React.Component {
 
     render() {
         if (!this.props.popup)
-            return <img className="img img-responsive center-block" src={this.state.rsrc} onLoad={() => this.run()} onError={() => this.run()}/>;
+            return <img className="img-fluid mx-auto d-block" src={this.state.rsrc} onLoad={() => this.run()} onError={() => this.run()}/>;
         else
             return (
                 <>
                   {/* Activator */}
-                  <img className="img img-responsive center-block" src={this.state.rsrc} onLoad={() => this.run()} onError={() => this.run()} onClick={() => this.setState({show: true })} />
+                  <img className="img-fluid mx-auto d-block" src={this.state.rsrc} onLoad={() => this.run()} onError={() => this.run()} onClick={() => this.setState({show: true })} />
 
                     {/* Modal window */}
-                    <Modal bsSize="lg" show={this.state.show} onHide={() => this.setState({show: false})}>
+                    <Modal size="lg" show={this.state.show} onHide={() => this.setState({show: false})}>
                       <Modal.Header closeButton>
                         <Modal.Title>{this.props.title}</Modal.Title>
                       </Modal.Header>
                       <Modal.Body>
-                        <img className="img img-responsive center-block" src={this.state.rsrc} onLoad={() => this.run()} onError={() => this.run()} />
+                        <img className="img-fluid mx-auto d-block" src={this.state.rsrc} onLoad={() => this.run()} onError={() => this.run()} />
 
                       </Modal.Body>
                     </Modal>

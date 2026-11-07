@@ -38,7 +38,7 @@ class DeviceModal extends React.Component {
               </span>
 
               {/* Modal window */}
-              <Modal bsSize="lg" show={this.state.show} onHide={() => this.setState({show: false})}>
+              <Modal size="lg" show={this.state.show} onHide={() => this.setState({show: false})}>
                 <Modal.Header closeButton>
                   <Modal.Title>{this.props.title}</Modal.Title>
                 </Modal.Header>
@@ -50,7 +50,7 @@ class DeviceModal extends React.Component {
                   </Table>
                 </Modal.Body>
                 <Modal.Footer>
-                  <Button bsStyle="default" onClick={() => this.setState({show: false})}>Close</Button>
+                  <Button variant="outline-secondary" onClick={() => this.setState({show: false})}>Close</Button>
                 </Modal.Footer>
               </Modal>
             </>
@@ -181,7 +181,7 @@ class DeviceModalExt extends React.Component {
     }
 
     message(text, ctype="text-default", icons=null) {
-        var msg = text ? <span className={"pull-left " + ctype}>{text}</span> : null;
+        var msg = text ? <span className={"me-auto " + ctype}>{text}</span> : null;
 
         this.setState({message: msg, message_icons: icons});
     }
@@ -220,7 +220,7 @@ class DeviceModalExt extends React.Component {
               </span>
 
               {/* Modal window */}
-              <Modal bsSize="lg" show={this.state.show} onHide={() => this.handleHide()} keyboard={false}>
+              <Modal size="lg" show={this.state.show} onHide={() => this.handleHide()} keyboard={false}>
                 <Modal.Header closeButton>
                   <Modal.Title>{this.props.name} {this.state.title}</Modal.Title>
                 </Modal.Header>
@@ -242,8 +242,8 @@ class DeviceModalExt extends React.Component {
                    {this.state.message_icons.map((d,i) => <span key={i} style={{paddingRight: "0.3em"}}>{d}</span>)}
                      </span></> : null}
 
-                  <Button bsStyle="default" onClick={() => this.sendCommand('info')}>Refresh</Button>
-                  <Button bsStyle="default" onClick={() => this.handleHide()}>Close</Button>
+                  <Button variant="outline-secondary" onClick={() => this.sendCommand('info')}>Refresh</Button>
+                  <Button variant="outline-secondary" onClick={() => this.handleHide()}>Close</Button>
                 </Modal.Footer>
               </Modal>
             </>
@@ -254,25 +254,13 @@ class DeviceModalExt extends React.Component {
 DeviceModalExt.defaultProps = {refresh:"5000"};
 DeviceModalExt = ReactRedux.connect(mapStateToProps)(DeviceModalExt);
 
-class CustomToggle extends React.Component {
-    constructor(props, context) {
-        super(props, context);
-    }
-
-    handleClick(e) {
-        e.preventDefault();
-        this.props.onClick(e);
-    }
-
-    render() {
-        return (
-            <span onClick={(e) => this.handleClick(e)}>
-              {this.props.children}
-              {this.props.caret && <span className="caret" />}
-            </span>
-        );
-    }
-}
+// Dropdown toggle rendered as plain text; must forward the ref so the menu can be positioned
+const CustomToggle = React.forwardRef(({children, onClick}, ref) => (
+    <span ref={ref} style={{cursor: 'pointer'}} onClick={(e) => {e.preventDefault(); onClick(e);}}>
+      {children}
+      <span className="bi bi-caret-down-fill ms-1 small"/>
+    </span>
+));
 
 class DeviceVariable extends React.Component {
     constructor(props, context) {
@@ -407,16 +395,16 @@ class DeviceVariable extends React.Component {
 
         if (is_writable) {
             style1['fontWeight'] = 'bold';
-            icons.push(<span className="glyphicon glyphicon-edit" style={{color:'lightgray'}}/>);
+            icons.push(<span className="bi bi-pencil-square" style={{color:'var(--bs-tertiary-color)'}}/>);
         }
 
         if (is_autosave) {
-            icons.push(<span className="glyphicon glyphicon-cloud" style={{color:'lightgray'}}/>);
+            icons.push(<span className="bi bi-cloud" style={{color:'var(--bs-tertiary-color)'}}/>);
         }
 
         if (is_fits) {
-            style1['color'] = 'darkcyan';
-            icons.push(<span className="glyphicon glyphicon-floppy-save" style={{color:'lightgray'}}/>);
+            style1['color'] = 'var(--bs-info-text-emphasis)';
+            icons.push(<span className="bi bi-floppy" style={{color:'var(--bs-tertiary-color)'}}/>);
         }
 
         // Selections
@@ -436,9 +424,9 @@ class DeviceVariable extends React.Component {
                 value = <Dropdown id='dropdown'
                                   onSelect={(v) => {this.setState({edit: false}); this.sendValue(v);}}>
 
-                          <CustomToggle caret bsRole="toggle">{raw + ' : ' + selval[raw]}</CustomToggle>
+                          <Dropdown.Toggle as={CustomToggle}>{raw + ' : ' + selval[raw]}</Dropdown.Toggle>
                           <Dropdown.Menu>
-                            {selval.map((d,i) => <MenuItem key={i} eventKey={i} active={i==raw}>{d}</MenuItem>)}
+                            {selval.map((d,i) => <Dropdown.Item key={i} eventKey={i} active={i==raw}>{d}</Dropdown.Item>)}
                           </Dropdown.Menu>
 
 
@@ -504,7 +492,7 @@ class DeviceVariable extends React.Component {
         }
 
         return (
-            <tr className={cname}>
+            <tr className={cname ? "table-" + cname : null}>
               <td style={style1} onMouseEnter={()=>this.message(desc, 'text-default', icons)} onMouseLeave={()=>this.message(null)}>
                 {name}
               </td>

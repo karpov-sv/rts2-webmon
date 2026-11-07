@@ -72,27 +72,26 @@ class CameraModal extends React.Component {
               </span>
 
               {/* Modal window */}
-                <Modal bsSize="lg" show={this.state.show} onHide={() => this.setState({show: false})}>
+                <Modal size="lg" show={this.state.show} onHide={() => this.setState({show: false})}>
                 <Modal.Header closeButton>
                   <Modal.Title>{title}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                   <a href={url}/>
-                  <img className="img img-responsive center-block" src={src} onClick={()=>window.open(url, '_blank')}/>
+                  <img className="img-fluid mx-auto d-block" src={src} onClick={()=>window.open(url, '_blank')}/>
                 </Modal.Body>
                 <Modal.Footer>
-                  <span className="pull-left">
-                      <Form inline onSubmit={evt => {this.sendVariable('focpos', this.state.focpos); evt.preventDefault();}}>
-                        <Button bsStyle="default" onClick={() => this.sendCommand('expose')}>Expose</Button>
-                        {' '}
-                        <FormControl type="text" size={5}
+                  <span className="me-auto">
+                      <Form className="d-flex gap-1" onSubmit={evt => {this.sendVariable('focpos', this.state.focpos); evt.preventDefault();}}>
+                        <Button variant="outline-secondary" onClick={() => this.sendCommand('expose')}>Expose</Button>
+                        <FormControl type="text" htmlSize={5}
                                      placeholder="focpos"
                                      value={this.state.focpos}
                                      onChange={(evt) => this.handleChangeFocpos(evt)}/>
                     </Form>
                   </span>
 
-                  <Button bsStyle="default" onClick={() => this.setState({show: false})}>Close</Button>
+                  <Button variant="outline-secondary" onClick={() => this.setState({show: false})}>Close</Button>
                 </Modal.Footer>
               </Modal>
             </>

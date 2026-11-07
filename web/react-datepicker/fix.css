@@ -1,21 +1,85 @@
 /* */
 
 .react-datepicker-popper {
-    z-index: 2;
+    /* above Bootstrap 5 input-group buttons, which use z-index up to 5 */
+    z-index: 10;
     top: 0px !important;
     /* needed because we made it inline */
 }
 
-.react-datepicker-wrapper,
-.react-datepicker-wrapper .react-datepicker__input-container {
-    /* https://github.com/Hacker0x01/react-datepicker/issues/1672 */
-    width: 100%;
+/* Let the date picker fill the remaining space of a Bootstrap 5 input group,
+   like a .form-control placed directly inside it. react-datepicker 1.x wraps
+   its .react-datepicker-wrapper in an extra unclassed div (react-popper Manager) */
+.input-group > div:has(> .react-datepicker-wrapper) {
+    flex: 1 1 auto;
+    width: 1%;
+    min-width: 0;
+}
 
-    /* to make it exactly the same height as the bootstrap input-group-addons */
-    display: inline;
+.react-datepicker-wrapper,
+.react-datepicker-wrapper .react-datepicker__input-container,
+.react-datepicker-wrapper .react-datepicker__input-container .form-control {
+    width: 100%;
+}
+
+.input-group > div:has(> .react-datepicker-wrapper):not(:first-child) .form-control {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
 }
 
 .react-datepicker__time-list {
     padding-right: 0;
     padding-left: 0;
+}
+
+/* Dark mode: react-datepicker 1.x hardcodes light colors */
+@media (prefers-color-scheme: dark) {
+    .react-datepicker,
+    .react-datepicker__time-container .react-datepicker__time {
+        background-color: var(--bs-body-bg);
+        color: var(--bs-body-color);
+        border-color: var(--bs-border-color);
+    }
+
+    .react-datepicker__header {
+        background-color: var(--bs-tertiary-bg);
+        border-bottom-color: var(--bs-border-color);
+    }
+
+    .react-datepicker__time-container {
+        border-left-color: var(--bs-border-color);
+    }
+
+    .react-datepicker__current-month,
+    .react-datepicker-time__header,
+    .react-datepicker__day-name,
+    .react-datepicker__day,
+    .react-datepicker__time-name {
+        color: var(--bs-body-color);
+    }
+
+    .react-datepicker__day--disabled,
+    .react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list li.react-datepicker__time-list-item--disabled {
+        color: var(--bs-tertiary-color);
+    }
+
+    .react-datepicker__day:hover,
+    .react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list li.react-datepicker__time-list-item:hover {
+        background-color: var(--bs-secondary-bg);
+    }
+
+    .react-datepicker__day--selected,
+    .react-datepicker__day--keyboard-selected {
+        color: #fff;
+    }
+
+    .react-datepicker-popper[data-placement^="bottom"] .react-datepicker__triangle,
+    .react-datepicker-popper[data-placement^="bottom"] .react-datepicker__triangle::before {
+        border-bottom-color: var(--bs-tertiary-bg);
+    }
+
+    .react-datepicker-popper[data-placement^="top"] .react-datepicker__triangle,
+    .react-datepicker-popper[data-placement^="top"] .react-datepicker__triangle::before {
+        border-top-color: var(--bs-body-bg);
+    }
 }

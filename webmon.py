@@ -433,7 +433,6 @@ if __name__ == '__main__':
 
     root = File(b"web")
     root.putChild(b"", File('web/main.html'))
-    root.putChild(b"dark", File('web/main.dark.html'))
     root.putChild(b"monitor", EncodingResourceWrapper(webmon, [GzipEncoderFactory()]))
 
     # root.putChild(b"all.jsx", ServeFiles('web/*.jsx'))
