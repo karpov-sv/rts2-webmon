@@ -194,3 +194,27 @@ a:not([href]):not([class]):hover {
 .rotate-180 {
   transform: rotate(-180deg);
 }
+
+/* Dark mode for contextual table rows (table-danger, ...): Bootstrap 5.3 compiles
+   them with fixed light colors, so base them on the subtle theme colors instead */
+@media (prefers-color-scheme: dark) {
+    .table-primary   { --row-bg: var(--bs-primary-bg-subtle);   --row-border: var(--bs-primary-border-subtle); }
+    .table-secondary { --row-bg: var(--bs-secondary-bg-subtle); --row-border: var(--bs-secondary-border-subtle); }
+    .table-success   { --row-bg: var(--bs-success-bg-subtle);   --row-border: var(--bs-success-border-subtle); }
+    .table-danger    { --row-bg: var(--bs-danger-bg-subtle);    --row-border: var(--bs-danger-border-subtle); }
+    .table-warning   { --row-bg: var(--bs-warning-bg-subtle);   --row-border: var(--bs-warning-border-subtle); }
+    .table-info      { --row-bg: var(--bs-info-bg-subtle);      --row-border: var(--bs-info-border-subtle); }
+
+    .table-primary, .table-secondary, .table-success,
+    .table-danger, .table-warning, .table-info {
+        --bs-table-color: var(--bs-body-color);
+        --bs-table-bg: var(--row-bg);
+        --bs-table-border-color: var(--row-border);
+        --bs-table-striped-color: var(--bs-body-color);
+        --bs-table-striped-bg: color-mix(in srgb, var(--row-bg), white 5%);
+        --bs-table-hover-color: var(--bs-body-color);
+        --bs-table-hover-bg: color-mix(in srgb, var(--row-bg), white 10%);
+        --bs-table-active-color: var(--bs-body-color);
+        --bs-table-active-bg: color-mix(in srgb, var(--row-bg), white 12%);
+    }
+}
