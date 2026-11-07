@@ -240,6 +240,17 @@ class WebMonitor(Resource):
             return q.path;
         # return serve_json(request, clients=self.object['clients'])
 
+class NoCacheFile(File):
+    """Static files that browsers must revalidate on every load.
+
+    Without Cache-Control, browsers cache files with only Last-Modified for
+    about 10% of their age, i.e. for months for old vendored libraries, and
+    keep serving stale copies after an update.
+    """
+    def render_GET(self, request):
+        request.setHeader(b'Cache-Control', b'no-cache')
+        return File.render_GET(self, request)
+
 class ServeFiles(Resource):
     isLeaf = True
 
@@ -431,8 +442,8 @@ if __name__ == '__main__':
     # Serve files from web
     webmon = WebMonitor(object=obj)
 
-    root = File(b"web")
-    root.putChild(b"", File('web/main.html'))
+    root = NoCacheFile(b"web")
+    root.putChild(b"", NoCacheFile('web/main.html'))
     root.putChild(b"monitor", EncodingResourceWrapper(webmon, [GzipEncoderFactory()]))
 
     # root.putChild(b"all.jsx", ServeFiles('web/*.jsx'))
